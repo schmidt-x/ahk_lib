@@ -20,6 +20,7 @@ class Paths {
 	static QmkUsersMe   := this.QmkUsers "\schmidt-x"
 	
 	static VsCodeUser := A_AppData "\Code\User"
+	static AhkLib     := A_MyDocuments "\AutoHotkey\Lib"
 	
 	
 	static _paths := Map()
@@ -38,8 +39,9 @@ class Paths {
 			"qmk/i44",     this.QmkKbI44,
 			"qmk/k02",     this.QmkKbK02,
 			"qmk/usr",     this.QmkUsers,
-			"qmk/usr/.",   this.QmkUsersMe,
+			"qmk/usr/me",  this.QmkUsersMe,
 			"ahk/i44",     this.ScriptDir,
+			"ahk/lib",     this.AhkLib,
 			"me",          this.User,
 			"code/usr",    this.VsCodeUser,
 		)
