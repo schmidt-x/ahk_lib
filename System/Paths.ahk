@@ -58,7 +58,7 @@ class Paths {
 	 * @returns {Boolean}
 	 * `True` if path is found; `False` otherwise
 	 */
-	static TryGetFolderPath(folderName, &path) { ; -> bool
+	static TryGetFolderPath(folderName, &path) {
 		path := this._paths[folderName]
 		return path != ""
 	}
