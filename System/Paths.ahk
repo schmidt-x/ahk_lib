@@ -19,6 +19,8 @@ class Paths {
 	static QmkKbK02     := this.QmkKeyboards "\ergohaven\k02"
 	static QmkUsersMe   := this.QmkUsers "\schmidt-x"
 	
+	static LocalPrograms := this.User "\AppData\Local\Programs"
+	
 	static VsCodeUser := A_AppData "\Code\User"
 	static AhkLib     := A_MyDocuments "\AutoHotkey\Lib"
 	

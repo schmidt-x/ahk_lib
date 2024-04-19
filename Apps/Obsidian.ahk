@@ -1,9 +1,10 @@
+#Include <System\Paths>
 #Include <Misc\CommandRunner>
 
 class Obsidian {
 	static _processName     := "Obsidian.exe"
 	static _winProcessName  := "ahk_exe Obsidian.exe"
-	static _fullProcessName := "C:\Users\" . A_UserName . "\AppData\Local\Programs\Obsidian\Obsidian.exe"
+	static _fullProcessName := Paths.LocalPrograms "\Obsidian\Obsidian.exe"
 	
 	static ProcessName => this._processName
 	static IsActive => WinActive(this._winProcessName)
