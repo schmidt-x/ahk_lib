@@ -1,4 +1,5 @@
 #Include <System\Constants>
+#Include <Common\Disposition>
 #Include <Common\Helpers>
 
 class CommandRunner {
@@ -13,13 +14,15 @@ class CommandRunner {
 	static _commands  := Map()
 	static _prevWinId := 0
 	
-	static _guiPaddX := 0
-	static _guiPaddY := 0
+	static _xGuiPadd := 0
+	static _yGuiPadd := 0
 	
-	static _xCenterRelative := true
-	static _yCenterRelative := true
-	static _posX := A_ScreenWidth / 2
-	static _posY := A_ScreenHeight / 100 * 30
+	static _xDisposition := Disposition.Centered
+	static _yDisposition := Disposition.Centered
+	
+	static _xPos := A_ScreenWidth / 2
+	static _yPos := A_ScreenHeight / 100 * 30
+	
 	static _width  := 800
 	static _height := 32
 	
@@ -27,7 +30,7 @@ class CommandRunner {
 	
 	static __New() {
 		this._InitCommands()
-		this._InitTerminal()
+		this._InitConsole()
 		
 		OnMessage(WM_KEYDOWN, this._OnKEYDOWN.Bind(this))
 	}
@@ -38,29 +41,28 @@ class CommandRunner {
 		this._console.Show()
 	}
 	
-	; TODO: add docs
 	static Move(
-		x := this._posX,
-		y := this._posY, 
+		x := this._xPos,
+		y := this._yPos, 
 		width := this._width, 
 		height := this._height,
-		xCenterRelative := this._xCenterRelative,
-		yCenterRelative := this._yCenterRelative) 
+		xDisposition := this._xDisposition,
+		yDisposition := this._yDisposition) 
 	{
 		this._console.Move(
-			x - this._guiPaddX - (xCenterRelative ? width / 2 : 0),
-			y - this._guiPaddY - (yCenterRelative ? height / 2 : 0), 
-			width + this._guiPaddX * 2,
-			height + this._guiPaddY * 2)
+			x - this._xGuiPadd + Disposition.GetShift(xDisposition, width),
+			y - this._yGuiPadd + Disposition.GetShift(yDisposition, height),
+			width + this._xGuiPadd * 2,
+			height + this._yGuiPadd * 2)
 
 		this._consoleEdit.Move(, , width, height)
 		
-		this._posX := x
-		this._posY := y
+		this._xPos := x
+		this._yPos := y
 		this._width := width
 		this._height := height
-		this._xCenterRelative := xCenterRelative
-		this._yCenterRelative := yCenterRelative
+		this._xDisposition := xDisposition
+		this._yDisposition := yDisposition
 	}
 	
 	; TODO: add docs
@@ -91,7 +93,7 @@ class CommandRunner {
 	
 	; --- private ---
 
-	; TODO: probably shoud redo using dynamic hotkeys
+	; TODO: probably should redo using dynamic hotkeys
 	static _OnKEYDOWN(wParam, lParam, msg, hwnd) {
 		if not this.IsActive {
 			return
@@ -100,7 +102,11 @@ class CommandRunner {
 		switch wParam {
 		case VK_ESCAPE: this._Close()
 		case VK_RETURN: this._Execute()
-		case VK_BACK, GetKeyState("LCtrl", "P"): SendInput("{Blind}+{Left}{Del}")
+		case VK_BACK:
+			if not GetKeyState("LCtrl", "P") {
+				return
+			} 
+			SendInput("{Blind}+{Left}{Del}")
 		default: return
 		}
 		
@@ -171,7 +177,7 @@ class CommandRunner {
 		MsgBox("TODO")
 	}
 	
-	static _InitTerminal() {
+	static _InitConsole() {
 		this._console.Opt("+AlwaysOnTop -Caption +ToolWindow")
 		this._console.BackColor := "000000"
 		WinSetTransColor(this._console.BackColor . " 250", this._console.Hwnd)
@@ -183,12 +189,12 @@ class CommandRunner {
 		this._console.Show("Hide")
 		this._console.GetPos(, , &actualWidth, &actualHeight)
 		
-		this._guiPaddX := (actualWidth - this._width) / 2
-		this._guiPaddY := (actualHeight - this._height) / 2
+		this._xGuiPadd := (actualWidth - this._width) / 2
+		this._yGuiPadd := (actualHeight - this._height) / 2
 		
 		this._console.Move(
-			this._posX - this._guiPaddX - (this._xCenterRelative ? this._width / 2 : 0),
-			this._posY - this._guiPaddY - (this._yCenterRelative ? this._height / 2 : 0)
+			this._xPos - this._xGuiPadd + Disposition.GetShift(this._xDisposition, this._width),
+			this._yPos - this._yGuiPadd + Disposition.GetShift(this._yDisposition, this._height)
 		)
 	}
 }

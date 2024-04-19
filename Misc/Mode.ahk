@@ -18,7 +18,7 @@ class Mode {
 	 */
 	static _displayText := unset
 	
-	static _enabled := true
+	static _enabled := false
 	
 	static _xDisposition := Disposition.None
 	static _yDisposition := Disposition.Inverted
@@ -43,8 +43,6 @@ class Mode {
 	
 	static __New() {
 		this._InitDisplay()
-		
-		this.SetDefault()
 		
 		CommandRunner.AddCommands("mode", this._HandleCommand.Bind(this))
 		
@@ -207,6 +205,8 @@ class Mode {
 			this._xPos - this._xGuiPadd + Disposition.GetShift(this._xDisposition, this._width),
 			this._yPos - this._yGuiPadd + Disposition.GetShift(this._yDisposition, this._height)
 		)
+		
+		this.SetDefault()
 	}
 	
 	static _DisplayNormal() => this._DisplayMode("Normal")
