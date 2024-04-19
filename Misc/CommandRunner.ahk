@@ -21,7 +21,7 @@ class CommandRunner {
 	static _yDisposition := Disposition.Centered
 	
 	static _xPos := A_ScreenWidth / 2
-	static _yPos := A_ScreenHeight / 100 * 30
+	static _yPos := A_ScreenHeight / 100 * 20
 	
 	static _width  := 800
 	static _height := 32
