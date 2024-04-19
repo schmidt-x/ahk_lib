@@ -190,7 +190,7 @@ class Mode {
 		WinSetTransColor(this._display.BackColor . " 240", this._display.Hwnd)
 		this._display.SetFont("s16 c0x5c5c5c", "JetBrains Mono Regular")
 		
-		textOpts := Format("Background171717 -E0x255 w{1} h{2} Center", this._width, this._height)
+		textOpts := Format("Background171717 -E0x200 w{1} h{2} Center", this._width, this._height)
 		this._displayText  := this._display.AddText(textOpts)
 		
 		; get the actual size of the window, including its title bar, menu and borders

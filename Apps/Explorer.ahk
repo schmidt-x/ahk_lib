@@ -42,4 +42,6 @@ class Explorer {
 	static NewTab() => SendInput("^t")
 	
 	static CreateFolder() => SendInput("+^n")
+	
+	static OpenContextMenu() => SendInput("+{F10}")
 }

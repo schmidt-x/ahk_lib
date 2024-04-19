@@ -183,7 +183,7 @@ class CommandRunner {
 		WinSetTransColor(this._console.BackColor . " 250", this._console.Hwnd)
 		this._console.SetFont("s18 c0xbdbdbd", "JetBrains Mono Regular")
 		
-		editOpts := Format("Background171717 -E0x255 Center w{1} h{2}", this._width, this._height)
+		editOpts := Format("Background171717 -E0x200 Center w{1} h{2}", this._width, this._height)
 		this._consoleEdit := this._console.AddEdit(editOpts)
 		
 		this._console.Show("Hide")

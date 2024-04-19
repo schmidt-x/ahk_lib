@@ -1,0 +1,10 @@
+#Include <Apps\Chrome>
+#Include <Apps\Discord>
+#Include <Apps\Explorer>
+#Include <Apps\Obsidian>
+#Include <Apps\OperaGX>
+#Include <Apps\QmkMSys>
+#Include <Apps\Rider>
+#Include <Apps\Steam>
+#Include <Apps\Telegram>
+#Include <Apps\VsCode>

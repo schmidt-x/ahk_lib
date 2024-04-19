@@ -3,6 +3,7 @@ class Disposition {
 	static Centered => 1
 	static Inverted => 2
 	
+	; TODO: add docs
 	static GetShift(d, wh) {
 		switch d {
 		case Disposition.Inverted: 
