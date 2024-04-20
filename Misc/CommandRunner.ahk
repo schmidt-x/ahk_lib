@@ -7,15 +7,21 @@ class CommandRunner {
 	static _console := Gui()
 	
 	/**
-	 * @type {Gui.Console}
+	 * @type {Gui.Control}
 	 */
-	static _consoleEdit := unset
+	static _consoleEdit     := unset
+	static _consoleEditHwnd := unset
+	
+	/**
+	 * @type {Gui.Control}
+	 */
+	static _errorEdit       := unset
+	static _errorEditHwnd   := unset
+	static _errorEditHeight := 350
+	static _errorEditPaddY  := 15
 	
 	static _commands  := Map()
 	static _prevWinId := 0
-	
-	static _xGuiPadd := 0
-	static _yGuiPadd := 0
 	
 	static _xDisposition := Disposition.Centered
 	static _yDisposition := Disposition.Centered
@@ -50,12 +56,13 @@ class CommandRunner {
 		yDisposition := this._yDisposition) 
 	{
 		this._console.Move(
-			x - this._xGuiPadd + Disposition.GetShift(xDisposition, width),
-			y - this._yGuiPadd + Disposition.GetShift(yDisposition, height),
-			width + this._xGuiPadd * 2,
-			height + this._yGuiPadd * 2)
+			x + Disposition.GetShift(xDisposition, width),
+			y + Disposition.GetShift(yDisposition, height),
+			width,
+			height + this._errorEditHeight + this._errorEditPaddY)
 
 		this._consoleEdit.Move(, , width, height)
+		this._errorEdit.Move(, height + this._errorEditPaddY, width)
 		
 		this._xPos := x
 		this._yPos := y
@@ -116,7 +123,12 @@ class CommandRunner {
 	; TODO: add docs
 	static _Close() {
 		this._consoleEdit.Value := ""
-		Sleep(1)
+		
+		if this._errorEdit.Visible {
+			this._errorEdit.Value := ""
+			this._errorEdit.Visible := false
+		}
+		
 		this._console.Hide()
 		
 		; Sometimes, the focus might be stolen by FileExplorer. Or if we were
@@ -132,7 +144,6 @@ class CommandRunner {
 	; TODO: add docs
 	static _Execute() {
 		input := this._consoleEdit.Value
-		this._Close()
 		
 		if StrIsEmptyOrWhiteSpace(input) {
 			this._DisplayError("Empty input")
@@ -143,14 +154,22 @@ class CommandRunner {
 		
 		func := this._commands.Get(command)
 		if not func {
-			this._DisplayError(Format("Command «{1}» not found", command))
+			this._DisplayErrorF("Command «{1}» not found", command)
 			return
 		}
 		
 		func(&args, &(err := ""))
 		if err {
-			this._DisplayError(Format('Error on processing command «{1}»: "{2}"', command, err))
+			this._DisplayError(err)
+			return
 		}
+		
+		this._consoleEdit.Value := ""
+		
+		if (this._errorEdit.Visible) {
+			this._HideError()
+		}
+		
 		
 		SplitInput(&input, &command, &args) {
 			; Divide it into just 2 parts and return the arguments (if any) as a single string,
@@ -162,9 +181,22 @@ class CommandRunner {
 		}
 	}
 	
-	; TODO:
+	static _DisplayErrorF(pattern, params*) {
+		this._errorEdit.Visible := true
+		this._errorEdit.Value := Format(pattern, params*)
+		ControlShow(this._errorEditHwnd)
+	}
+	
 	static _DisplayError(err) {
-		Display(err, 3000, 2)
+		this._errorEdit.Visible := true
+		this._errorEdit.Value := err
+		ControlShow(this._errorEditHwnd)
+	}
+	
+	static _HideError() {
+		this._errorEdit.Value := ""
+		this._errorEdit.Visible := false
+		ControlHide(this._errorEditHwnd)
 	}
 	
 	static _InitCommands() {
@@ -172,29 +204,37 @@ class CommandRunner {
 		this._commands.Default := ""
 	}
 	
-	; TODO:
 	static _HandleCommand(&args, &err) {
-		MsgBox("TODO")
+		err := "TODO"
 	}
 	
 	static _InitConsole() {
-		this._console.Opt("+AlwaysOnTop -Caption +ToolWindow")
+		this._console.Opt("-Caption ToolWindow")
+		
 		this._console.BackColor := "000000"
 		WinSetTransColor(this._console.BackColor . " 250", this._console.Hwnd)
+		this._console.MarginX := 0
+		this._console.MarginY := 0
+		
 		this._console.SetFont("s18 c0xbdbdbd", "JetBrains Mono Regular")
 		
 		editOpts := Format("Background171717 -E0x200 Center w{1} h{2}", this._width, this._height)
 		this._consoleEdit := this._console.AddEdit(editOpts)
+		this._consoleEditHwnd := ControlGetHwnd(this._consoleEdit)
+		
+		editOpts := Format(
+			"Background171717 -E0x200 xP yP+{1} wP h{2} -VScroll ReadOnly Hidden", 
+			this._height + this._errorEditPaddY,
+			this._errorEditHeight)
+			
+		this._errorEdit := this._console.AddEdit(editOpts)
+		this._errorEditHwnd := ControlGetHwnd(this._errorEdit)
 		
 		this._console.Show("Hide")
-		this._console.GetPos(, , &actualWidth, &actualHeight)
-		
-		this._xGuiPadd := (actualWidth - this._width) / 2
-		this._yGuiPadd := (actualHeight - this._height) / 2
 		
 		this._console.Move(
-			this._xPos - this._xGuiPadd + Disposition.GetShift(this._xDisposition, this._width),
-			this._yPos - this._yGuiPadd + Disposition.GetShift(this._yDisposition, this._height)
+			this._xPos + Disposition.GetShift(this._xDisposition, this._width),
+			this._yPos + Disposition.GetShift(this._yDisposition, this._height)
 		)
 	}
 }

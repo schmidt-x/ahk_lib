@@ -11,14 +11,14 @@ class ModeType {
 
 class Mode {
 	static _current := 0
+	
 	static _display := Gui()
+	static _enabled := false
 	
 	/**
 	 * @type {Gui.Control}
 	 */
 	static _displayText := unset
-	
-	static _enabled := false
 	
 	static _xDisposition := Disposition.None
 	static _yDisposition := Disposition.Inverted
@@ -28,9 +28,6 @@ class Mode {
 	
 	static _width  := 90
 	static _height := 27
-	
-	static _xGuiPadd := 0
-	static _yGuiPadd := 0
 	
 	
 	static IsNormal  => this._current == ModeType.Normal
@@ -43,12 +40,7 @@ class Mode {
 	
 	static __New() {
 		this._InitDisplay()
-		
 		CommandRunner.AddCommands("mode", this._HandleCommand.Bind(this))
-		
-		if this._enabled {
-			this.Show()
-		}
 	}
 	
 	
@@ -79,10 +71,10 @@ class Mode {
 		yDisposition := this._yDisposition) 
 	{
 		this._display.Move(
-			x - this._xGuiPadd + Disposition.GetShift(xDisposition, width),
-			y - this._yGuiPadd + Disposition.GetShift(yDisposition, height),
-			width + this._xGuiPadd * 2,
-			height + this._yGuiPadd * 2)
+			x + Disposition.GetShift(xDisposition, width),
+			y + Disposition.GetShift(yDisposition, height),
+			width,
+			height)
 
 		this._displayText.Move(, , width, height)
 		
@@ -93,7 +85,9 @@ class Mode {
 		this._xDisposition := xDisposition
 		this._yDisposition := yDisposition
 		
-		this._displayText.Redraw()
+		if this._enabled {
+			this._displayText.Redraw()
+		}
 	}
 	
 	static SetDefault() => this.SetNormal()
@@ -185,25 +179,22 @@ class Mode {
 	}
 	
 	static _InitDisplay() {
-		this._display.Opt("AlwaysOnTop -Caption +ToolWindow")
+		this._display.Opt("AlwaysOnTop -Caption ToolWindow")
+		this._display.MarginX := 0
+		this._display.MarginY := 0
+		
 		this._display.BackColor := "000000" ; any color (since we're gonna make it transparent)
 		WinSetTransColor(this._display.BackColor . " 240", this._display.Hwnd)
 		this._display.SetFont("s16 c0x5c5c5c", "JetBrains Mono Regular")
 		
-		textOpts := Format("Background171717 -E0x200 w{1} h{2} Center", this._width, this._height)
+		textOpts := Format("Background171717 w{1} h{2} Center", this._width, this._height)
 		this._displayText  := this._display.AddText(textOpts)
 		
-		; get the actual size of the window, including its title bar, menu and borders
 		this._display.Show("Hide")
-		this._display.GetPos(, , &width, &height)
-		
-		; calculate padding added by Gui
-		this._xGuiPadd := (width - this._width) / 2
-		this._yGuiPadd := (height - this._height) / 2
 		
 		this._display.Move(
-			this._xPos - this._xGuiPadd + Disposition.GetShift(this._xDisposition, this._width),
-			this._yPos - this._yGuiPadd + Disposition.GetShift(this._yDisposition, this._height)
+			this._xPos + Disposition.GetShift(this._xDisposition, this._width),
+			this._yPos + Disposition.GetShift(this._yDisposition, this._height)
 		)
 		
 		this.SetDefault()
