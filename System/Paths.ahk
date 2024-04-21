@@ -70,30 +70,36 @@ class Paths {
 	 * Tries to find the path of a selected tab in File Explorer
 	 * @param {&String} path
 	 * Path to the selected tab is assigned on `return` (if found)
+	 * @param {Integer} hwnd
+	 * Handle of the File Explorer's window to search on. <br>
+	 * If `hwnd` is not provided, the current active window is considered
 	 * @param {Boolean} clsid
 	 * Defines whether to return the path if it's CLSID path
 	 * @returns {Boolean}
 	 * `True` if path is found; `False` otherwise
 	 */
-	static TryGet(&path, clsid := false) {
+	static TryGet(&path, hwnd := 0, clsid := false) {
 		if !IsSet(path) {
 			path := ""
 		}
 		
-		explorerHwnd := WinActive("ahk_exe explorer.exe")
-		if !explorerHwnd {
+		if not hwnd {
+			hwnd := WinActive("A")
+		}
+		
+		if WinGetProcessName(hwnd) !== "explorer.exe" {
 			return false
 		}
-	
-		if explorerHwnd == DllCall("GetShellWindow") {
+		
+		if hwnd == DllCall("GetShellWindow") {
 			path := this.Desktop
 			return true
 		}
 		
-		title := WinGetTitle(explorerHwnd)
+		title := WinGetTitle(hwnd)
 		
 		for window in ComObject("Shell.Application").Windows {
-			if window.hwnd != explorerHwnd || window.Document.Folder.Self.Name != title {
+			if window.hwnd != hwnd || window.Document.Folder.Self.Name != title {
 				continue
 			}
 			

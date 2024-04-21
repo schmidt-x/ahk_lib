@@ -2,8 +2,8 @@
 
 class Telegram {
 	static _processName     := "Telegram.exe"
-	static _winProcessName  := "ahk_exe Telegram.exe"
-	static _fullProcessName := A_AppData . "\Telegram Desktop\Telegram.exe"
+	static _winProcessName  := "ahk_exe " this._processName
+	static _fullProcessName := A_AppData . "\Telegram Desktop\" this._processName
 	
 	
 	static ProcessName => this._processName

@@ -3,8 +3,8 @@
 
 class Obsidian {
 	static _processName     := "Obsidian.exe"
-	static _winProcessName  := "ahk_exe Obsidian.exe"
-	static _fullProcessName := Paths.LocalPrograms "\Obsidian\Obsidian.exe"
+	static _winProcessName  := "ahk_exe " this._processName
+	static _fullProcessName := Paths.LocalPrograms "\Obsidian\" this._processName
 	
 	static ProcessName => this._processName
 	static IsActive => WinActive(this._winProcessName)

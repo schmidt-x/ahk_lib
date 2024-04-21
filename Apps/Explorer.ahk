@@ -4,8 +4,8 @@
 
 class Explorer {
 	static _processName     := "explorer.exe"
-	static _winProcessName  := "ahk_exe explorer.exe"
-	static _fullProcessName := "C:\Windows\explorer.exe"
+	static _winProcessName  := "ahk_exe " this._processName
+	static _fullProcessName := "C:\Windows\" this._processName
 	
 	static ProcessName => this._processName
 	static IsActive => WinActive(this._winProcessName)
@@ -14,14 +14,14 @@ class Explorer {
 		CommandRunner.AddCommands("exp", this.Open.Bind(this))
 	}
 	
-	static Open(&folder, &err) {
+	static Open(&folder, _, &err) {
 		if StrIsEmptyOrWhiteSpace(folder) {
 			SendInput("#e")
 			return
 		}
 	
 		if !Paths.TryGetFolderPath(folder, &path) {
-			err := "folder not found"
+			err := Format("Folder «{1}» not found", folder)
 			return
 		}
 		

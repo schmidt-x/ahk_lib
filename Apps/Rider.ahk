@@ -4,8 +4,8 @@
 
 class Rider {
 	static _processName     := "rider64.exe"
-	static _winProcessName  := "ahk_exe rider64.exe"
-	static _fullProcessName := Paths.LocalPrograms "\Rider\bin\rider64.exe"
+	static _winProcessName  := "ahk_exe " this._processName
+	static _fullProcessName := Paths.LocalPrograms "\Rider\bin\ " this._processName
 	
 	static _projects := Map()
 	
@@ -14,10 +14,10 @@ class Rider {
 	
 	static __New() {
 		this._InitProjects()
-		CommandRunner.AddCommands("rider", this.Run.Bind(this))
+		CommandRunner.AddCommands("rider", this.Open.Bind(this))
 	}
 	
-	static Run(&projName, &err) {
+	static Open(&projName, _, &err) {
 		if StrIsEmptyOrWhiteSpace(projName) {
 			; It doesn't seem to have a way to open the Welcome page,
 			; if at least one solution is already opened
@@ -30,7 +30,7 @@ class Rider {
 		proj := this._projects.Get(projName)
 		
 		if not proj {
-			err := "project not found"
+			err := Format("Project «{1}» is not found", projName)
 			return
 		} 
 		
@@ -39,6 +39,8 @@ class Rider {
 	
 	
 	static _InitProjects() {
+		this._projects.CaseSense := false
+		
 		this._projects.Set(
 			"file",    Paths.ProjectsCSharp . "\FileStorageApi\FileStorageApi.sln",
 			"console", Paths.ProjectsCSharp . "\TestConsole\TestConsole.sln",

@@ -1,7 +1,9 @@
+#Include <System\Paths>
+
 class Discord {
 	static _processName     := "Discord.exe"
-	static _winProcessName  := "ahk_exe Discord.exe"
-	static _fullProcessName := "C:\Users\" . A_UserName . "\AppData\Local\Discord\Update.exe --processStart Discord.exe"
+	static _winProcessName  := "ahk_exe " this._processName
+	static _fullProcessName :=  Paths.User "\AppData\Local\Discord\Update.exe --processStart " this._processName
 	
 	static ProcessName => this._processName
 	static IsActive => WinActive(this._winProcessName)

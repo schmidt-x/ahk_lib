@@ -4,26 +4,27 @@
 
 class VsCode {
 	static _processName     := "Code.exe"
-	static _winProcessName  := "ahk_exe Code.exe"
-	static _fullProcessName := Paths.LocalPrograms "\Microsoft VS Code\Code.exe"
+	static _winProcessName  := "ahk_exe " this._processName
+	static _fullProcessName := Paths.LocalPrograms "\Microsoft VS Code\" this._processName
 	
 	static ProcessName => this._processName
 	static IsActive => WinActive(this._winProcessName)
 	
 	static __New() {
-		CommandRunner.AddCommands("code", this.Run.Bind(this))
+		CommandRunner.AddCommands("code", this.Open.Bind(this))
 	}
 	
 	
-	static Run(&args, &err) {
+	; TODO: add docs and support different options (-p path, -f folder, etc)
+	static Open(&args, hwnd, &err) {
 		if StrIsEmptyOrWhiteSpace(args) {
 			Run(this._fullProcessName)
 			return
 		}
 		
 		if args == "." {
-			if !Paths.TryGet(&p) {
-				err := "path not found"
+			if !Paths.TryGet(&p, hwnd) {
+				err := "Path not found"
 				return
 			}
 			
@@ -32,7 +33,7 @@ class VsCode {
 		}
 		
 		if !Paths.TryGetFolderPath(args, &p) {
-			err := "folder not found"
+			err := Format("Folder «{1}» not found", args)
 			return
 		}
 		

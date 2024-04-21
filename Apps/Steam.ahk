@@ -3,7 +3,7 @@
 class Steam {
 	static _processName     := "steam.exe"
 	static _winProcessName  := "ahk_exe steamwebhelper.exe"
-	static _fullProcessName := "C:\Program Files (x86)\Steam\steam.exe"
+	static _fullProcessName := "C:\Program Files (x86)\Steam\" this._processName
 	
 	
 	static __New() {

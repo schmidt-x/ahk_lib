@@ -1,7 +1,7 @@
 class Chrome {
 	static _processName     := "chrome.exe"
-	static _winProcessName  := "ahk_exe chrome.exe"
-	static _fullProcessName := A_ProgramFiles . "\Google\Chrome\Application\chrome.exe"
+	static _winProcessName  := "ahk_exe " this._processName
+	static _fullProcessName := A_ProgramFiles . "\Google\Chrome\Application\" this._processName
 	
 	static ProcessName => this._processName
 	static IsActive => WinActive(this._winProcessName)

@@ -85,9 +85,7 @@ class Mode {
 		this._xDisposition := xDisposition
 		this._yDisposition := yDisposition
 		
-		if this._enabled {
-			this._displayText.Redraw()
-		}
+		this._displayText.Redraw()
 	}
 	
 	static SetDefault() => this.SetNormal()

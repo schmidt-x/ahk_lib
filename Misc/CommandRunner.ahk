@@ -20,8 +20,8 @@ class CommandRunner {
 	static _errorEditHeight := 350
 	static _errorEditPaddY  := 15
 	
-	static _commands  := Map()
-	static _prevWinId := 0
+	static _commands := Map()
+	static _prevWinHwnd := 0
 	
 	static _xDisposition := Disposition.Centered
 	static _yDisposition := Disposition.Centered
@@ -43,7 +43,7 @@ class CommandRunner {
 	
 	
 	static Open() {
-		this._prevWinId := WinExist("A")
+		this._prevWinHwnd := WinExist("A")
 		this._console.Show()
 	}
 	
@@ -102,7 +102,7 @@ class CommandRunner {
 
 	; TODO: probably should redo using dynamic hotkeys
 	static _OnKEYDOWN(wParam, lParam, msg, hwnd) {
-		if not this.IsActive {
+		if hwnd != this._consoleEditHwnd {
 			return
 		}
 		
@@ -135,9 +135,9 @@ class CommandRunner {
 		; focused on the desktop before opening the terminal, focus will not 
 		; be returned back to the desktop, if we have any window opened.
 		; Hence, we explicitly activate the previous window (if any).
-		if this._prevWinId && WinExist(this._prevWinId) {
-			WinActivate(this._prevWinId)
-			this._prevWinId := 0
+		if this._prevWinHwnd && WinExist(this._prevWinHwnd) {
+			WinActivate(this._prevWinHwnd)
+			this._prevWinHwnd := 0
 		}
 	}
 	
@@ -158,7 +158,7 @@ class CommandRunner {
 			return
 		}
 		
-		func(&args, &(err := ""))
+		func(&args, this._prevWinHwnd, &(err := ""))
 		if err {
 			this._DisplayError(err)
 			return
@@ -200,6 +200,7 @@ class CommandRunner {
 	}
 	
 	static _InitCommands() {
+		this._commands.CaseSense := false
 		this._commands.Set("this", this._HandleCommand.Bind(this))
 		this._commands.Default := ""
 	}

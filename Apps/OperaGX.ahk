@@ -2,8 +2,8 @@
 
 class OperaGX {
 	static _processName     := "opera.exe"
-	static _winProcessName  := "ahk_exe opera.exe"
-	static _fullProcessName := Paths.LocalPrograms "\Opera GX\opera.exe"
+	static _winProcessName  := "ahk_exe " this._processName
+	static _fullProcessName := Paths.LocalPrograms "\Opera GX\" this._processName
 	
 	static ProcessName     => this._processName
 	static WinProcessName  => this._winProcessName
