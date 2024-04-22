@@ -32,6 +32,9 @@ class CommandRunner {
 	static _width  := 800
 	static _height := 32
 	
+	static _escaped := false
+	
+	
 	static IsActive => WinActive(this._console.Hwnd)
 	
 	static __New() {
@@ -39,6 +42,7 @@ class CommandRunner {
 		this._InitConsole()
 		
 		OnMessage(WM_KEYDOWN, this._OnKEYDOWN.Bind(this))
+		OnMessage(WM_ACTIVATE, this._OnACTIVATE.Bind(this))
 	}
 	
 	
@@ -107,8 +111,11 @@ class CommandRunner {
 		}
 		
 		switch wParam {
-		case VK_ESCAPE: this._Close()
-		case VK_RETURN: this._Execute()
+		case VK_ESCAPE:
+			this._escaped := true
+			this._Close()
+		case VK_RETURN:
+			this._Execute()
 		case VK_BACK:
 			if not GetKeyState("LCtrl", "P") {
 				return
@@ -118,6 +125,20 @@ class CommandRunner {
 		}
 		
 		return 0
+	}
+	
+	static _OnACTIVATE(wParam, lParam, msg, hwnd) {
+		if wParam != WA_INACTIVE || hwnd != this._console.Hwnd {
+			return
+		}
+		
+		if not this._escaped {
+			; If we just lost the focus of a console (didn't press Esc),
+			; just minimize it without clearing.
+			this._console.Hide()
+		}
+		
+		this._escaped := false
 	}
 	
 	; TODO: add docs

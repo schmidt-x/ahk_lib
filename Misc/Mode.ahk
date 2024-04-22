@@ -160,7 +160,7 @@ class Mode {
 	
 	; --- private ---
 	
-	static _HandleCommand(&args, &err) {
+	static _HandleCommand(&args, hwnd, &err) {
 		; TODO:
 		
 		if args == "-t" {
@@ -170,7 +170,7 @@ class Mode {
 		
 		err := "
 			(
-			Wrong option.
+			Wrong option.`n
 			Supported list of options:
 			-t `t Toggle Mode displaying
 			)"
