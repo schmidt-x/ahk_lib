@@ -59,18 +59,25 @@ class OperaGX {
 		SendInput("{LAlt Down}1{LAlt Up}")
 	}
 	
-	static ToMainWorkspace() {
+	static ToWorkspace1() {
 		; modified
-		; name: Workspaces shortcuts (main)
+		; name: Workspaces shortcuts (Main)
 		; default: none
 		SendInput("!2")
 	}
 	
-	static ToChillWorkspace() {
+	static ToWorkspace2() {
 		; modified
-		; name: Workspaces shortcuts (chill)
+		; name: Workspaces shortcuts (Chill)
 		; default: none
 		SendInput("!3")
+	}
+	
+	static ToWorkspace3() {
+		; modified
+		; name: Workspaces shortcuts (HID)
+		; default: none
+		SendInput("!7")
 	}
 	
 	static ForceDarkPage() {

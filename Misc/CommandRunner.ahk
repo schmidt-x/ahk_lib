@@ -136,9 +136,9 @@ class CommandRunner {
 			; If we just lost the focus of a console (didn't press Esc),
 			; just minimize it without clearing.
 			this._console.Hide()
+		} else {
+			this._escaped := false
 		}
-		
-		this._escaped := false
 	}
 	
 	; TODO: add docs
@@ -231,7 +231,7 @@ class CommandRunner {
 	}
 	
 	static _InitConsole() {
-		this._console.Opt("-Caption ToolWindow")
+		this._console.Opt("-Caption ToolWindow AlwaysOnTop")
 		
 		this._console.BackColor := "000000"
 		WinSetTransColor(this._console.BackColor . " 250", this._console.Hwnd)
