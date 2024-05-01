@@ -1,11 +1,10 @@
 class SP_DEVICE_INTERFACE_DATA extends Buffer {
-	_cbSize := 24 + A_PtrSize
-	_interfaceClassGuid := unset
 	_flags := unset
 
 	__New() {
-		super.__New(this._cbSize)
-		NumPut("UInt", this._cbSize, super.Ptr)
+		cbSize := 24 + A_PtrSize
+		super.__New(cbSize)
+		NumPut("UInt", cbSize, super.Ptr)
 	}
 	
 	GetFlags(cached := false) {
@@ -28,39 +27,26 @@ class SP_DEVICE_INTERFACE_DETAIL_DATA extends Buffer {
 }
 
 class SECURITY_ATTRIBUTES extends Buffer {
-	/**
-	 * The size, in bytes, of this structure.
-	 */
-	_nLength := (A_PtrSize == 8) ? 24 : 12
-	
-	/**
-	 * A pointer to a `SECURITY_DESCRIPTOR` structure that controls access to the object.
-	 */
-	_lpSecurityDescriptor := unset
-	
-	/**
-	 * A value that specifies whether the returned handle is inherited when a new process is created.
-	 */
-	_bInheritHandle := unset
 	
 	__New(lpSecurityDescriptor := 0, bInheritHandle := false) {
-		this._lpSecurityDescriptor := lpSecurityDescriptor
-		this._bInheritHandle := bInheritHandle
-		
-		super.__New(this._nLength)
-		
 		if A_PtrSize == 8 {
+			nLength := 24
+			super.__New(nLength, 0)
+			
 			NumPut(
-				"UInt", this._nLength,
+				"UInt", nLength,
 				"UInt", 0, ; padding
-				"Ptr",  this._lpSecurityDescriptor,
-				"Int",  this._bInheritHandle,
+				"Ptr",  lpSecurityDescriptor,
+				"Int",  bInheritHandle,
 				super.Ptr)
 		} else {
+			nLength := 12
+			super.__New(nLength, 0)
+			
 			NumPut(
-				"UInt", this._nLength,
-				"Ptr",  this._lpSecurityDescriptor,
-				"Int",  this._bInheritHandle,
+				"UInt", nLength,
+				"Ptr",  lpSecurityDescriptor,
+				"Int",  bInheritHandle,
 				super.Ptr)
 		}
 	}
@@ -133,5 +119,17 @@ class HIDP_CAPS extends Buffer {
 	
 	GetOutputReportByteLength(cached := false) {
 		return cached ? this._outputReportByteLength : (this._outputReportByteLength := NumGet(super.Ptr, 6, "UShort"))
+	}
+}
+
+class OVERLAPPED extends Buffer {
+	__New(hEvent) {
+		if A_PtrSize == 8 {
+			super.__New(32, 0)
+			NumPut("Ptr", hEvent, super.Ptr, 24)
+		} else {
+			super.__New(16, 0)
+			NumPut("Ptr", hEvent, super.Ptr, 12)
+		}
 	}
 }

@@ -87,6 +87,47 @@ class Kernel32 {
 	}
 	
 	/**
+	 * Reads data from the specified file or input/output (I/O) device.
+	 * 
+	 * @param {[in] HANDLE} hFile
+	 * A handle to the opened device. The `hFile` parameter must have been created with
+	 * `read` access.<br>
+	 * For asynchronous read operations, `hFile` can be any handle that is
+	 * opened with the `FILE_FLAG_OVERLAPPED` flag by the `CreateFile` function.
+	 * 
+	 * @param {[out] LPVOID} lpBuffer
+	 * A pointer to the buffer that receives the data read from a file or device.
+	 * 
+	 * @param {[in] DWORD} nNumberOfBytesToRead
+	 * The maximum number of bytes to be read.
+	 * 
+	 * @param {[out, optional] LPDWORD} lpNumberOfBytesRead
+	 * A pointer to the variable that receives the number of bytes read when using a synchronous
+	 * `hFile` parameter.<br> 
+	 * If the operation is asynchronous, the received number when this function returned is `0`.
+	 * To get the actual number of bytes read, use the `GetOverlappedResult` function.
+	 * 
+	 * @param {[in, out, optional] LPOVERLAPPED} lpOverlapped
+	 * A pointer to an `OVERLAPPED` structure is required if the `hFile` parameter was opened
+	 * with `FILE_FLAG_OVERLAPPED`, otherwise it can be `0`.
+	 * 
+	 * @returns {Boolean}
+	 * If the function succeeds, the return value is `true`.
+	 * If the function fails, the return value is `false`.<br>
+	 * If the function is completing asynchronously, the return value is `false` with
+	 * `A_LastError` set to `ERROR_IO_PENDING`.
+	 */
+	static ReadFile(hFile, lpBuffer, nNumberOfBytesToRead, &lpNumberOfBytesRead, lpOverlapped) {
+		return DllCall("kernel32\ReadFile",
+			"Ptr",   hFile,
+			"Ptr",   lpBuffer,
+			"UInt",  nNumberOfBytesToRead,
+			"UInt*", &lpNumberOfBytesRead:=0,
+			"Ptr",   lpOverlapped)
+	}
+	
+	
+	/**
 	 * Closes an open object handle.
 	 * 
 	 * @param {[in] HANDLE} hObject
@@ -127,4 +168,97 @@ class Kernel32 {
 	static FreeLibrary(hLibModule) {
 		return DllCall("kernel32\FreeLibrary", "Ptr", hLibModule)
 	}
+	
+	/**
+	 * Creates or opens a named or unnamed event object.
+	 * 
+	 * @param {[in, optional] LPSECURITY_ATTRIBUTES} lpEventAttributes
+	 * A pointer to a `SECURITY_ATTRIBUTES` structure.
+	 * 
+	 * @param {[in] BOOL} bManualReset
+	 * Defines if the event is reset manually with `ResetEvent()` (`true`), or 
+	 * automatically after releasing a waiting thread (`false`).
+	 * 
+	 * @param {[in] BOOL} bInitialState
+	 * If this parameter is `true`, the initial state of the event object is `signaled`;
+	 * otherwise, it is `nonsignaled`.
+	 * 
+	 * @param {[in, optional] LPCWSTR} lpName
+	 * The name of the event object. The name is limited to `MAX_PATH` characters. Name
+	 * comparison is case sensitive.
+	 * 
+	 * @returns {Integer}
+	 * If the function succeeds, the return value is a handle to the event object.
+	 * If the function fails, the return value is `0`.
+	 */
+	static CreateEventW(lpEventAttributes, bManualReset, bInitialState, lpName) {
+		return DllCall("kernel32\CreateEventW",
+			"Ptr", lpEventAttributes,
+			"Int", bManualReset,
+			"Int", bInitialState,
+			"Ptr", lpName,
+			"Ptr")
+	}
+	
+	/**
+	 * Waits until the specified object is in the signaled state or the time-out
+	 * interval elapses.
+	 * 
+	 * @param {[in] HANDLE} hHandle
+	 * A handle to one of the following objects:
+	 * - Change notification
+	 * - Console input
+	 * - Event
+	 * - Memory resource notification
+	 * - Mutex
+	 * - Process
+	 * - Semaphore
+	 * - Thread
+	 * - Waitable timer
+	 * 
+	 * @param {[in] DWORD} dwMilliseconds
+	 * The time-out interval, in milliseconds.<br>
+	 * If a nonzero value is specified, the function waits until the object is signaled 
+	 * or the interval elapses.<br>
+	 * If `dwMilliseconds` is zero, the function does not enter a wait state if the object
+	 * is not signaled; it always returns immediately.<br>
+	 * If `dwMilliseconds` is `INFINITE`, the function will return only when the object is 
+	 * signaled.
+	 * 
+	 * @returns {Integer}
+	 * The return value indicates the event that caused the function to return. It can be 
+	 * one of the following values:
+	 * 
+	 * - `WAIT_ABANDONED`: The specified object is a mutex object that was not released by
+	 * the thread that owned the mutex object before the owning thread terminated.
+	 * 
+	 * - `WAIT_OBJECT_0`: The state of the specified object is signaled.
+	 * 
+	 * - `WAIT_TIMEOUT`: The time-out interval elapsed, and the object's state is nonsignaled.
+	 * 
+	 * - `WAIT_FAILED`: The function has failed. To get extended error information, see `A_LastError`.
+	 */
+	static WaitForSingleObject(hHandle, dwMilliseconds) {
+		return DllCall("kernel32\WaitForSingleObject", "Ptr", hHandle, "UInt", dwMilliseconds)
+	}
+	
+	/**
+	 * Marks any outstanding I/O operations for the specified file handle. The function
+	 * only cancels I/O operations in the current process, regardless of which thread
+	 * created the I/O operation.
+	 * 
+	 * @param {[in] HANDLE} hFile
+	 * A handle to the file or device.
+	 * 
+	 * @param {[in, optional] LPOVERLAPPED} lpOverlapped
+	 * A pointer to an `OVERLAPPED` data structure that contains the data used for asynchronous I/O.
+	 * If this parameter is `0`, all I/O requests for the `hFile` parameter are canceled.
+	 * 
+	 * @returns {Boolean}
+	 * If the function succeeds, the return value is `true`; otherwise - `false`,
+	 */
+	static CancelIoEx(hFile, lpOverlapped) {
+		return DllCall("kernel32\CancelIoEx", "Ptr", hFile, "Ptr", lpOverlapped)
+	}
+	
 }

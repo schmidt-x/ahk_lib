@@ -33,23 +33,36 @@ class HidDevices {
 				
 				hDevice := Kernel32.CreateFileW(devicePath, ACCESS_NONE, shareMode, secAttributes, OPEN_EXISTING, 0, 0)
 				if hDevice == INVALID_HANDLE_VALUE {
-					err := Format("Failed at opening device: {1}.`nError code: {2}", devicePath, A_LastError)
-					return "" ; should I return or ignore and continue?
+					; TODO: to log
+					continue
 				}
 				
 				try {
 					hidAttributes := HIDD_ATTRIBUTES()
-					_ := Hid.HidD_GetAttributes(hDevice, hidAttributes)
+					succeeded := Hid.HidD_GetAttributes(hDevice, hidAttributes)
+					if not succeeded {
+						; TODO: to log
+						continue
+					}
 					
 					if vendorId != hidAttributes.GetVendorID() || productId != hidAttributes.GetProductID() {
 						continue
 					}
 					
-					_ := Hid.HidD_GetPreparsedData(hDevice, &preparsedData)
+					succeeded := Hid.HidD_GetPreparsedData(hDevice, &preparsedData)
+					if not succeeded {
+						; TODO: to log
+						continue
+					}
 					
 					try {
 						caps := HIDP_CAPS()
-						_ := Hid.HidP_GetCaps(preparsedData, caps)
+						
+						succeeded := Hid.HidP_GetCaps(preparsedData, caps)
+						if not succeeded {
+							; TODO: to log
+							continue
+						}
 						
 						if caps.GetUsageID() != usageId || caps.GetUsagePage() != usagePage {
 							continue
@@ -102,14 +115,19 @@ class HidDevices {
 					
 					devInterfaceDetailData := SP_DEVICE_INTERFACE_DETAIL_DATA(requiredSize)
 					
-					_ := SetupApi.SetupDiGetDeviceInterfaceDetailW(
+					succeeded := SetupApi.SetupDiGetDeviceInterfaceDetailW(
 						hDevInfoSet,
 						devInterfaceData,
 						devInterfaceDetailData,
 						requiredSize,
 						&requiredSize, 0)
 					
-					devicePathList.Push(devInterfaceDetailData.GetDevicePath())
+					if not succeeded {
+						; TODO: to log
+					} else {
+						devicePathList.Push(devInterfaceDetailData.GetDevicePath())
+					}
+					
 					mIndex++
 				}
 				
