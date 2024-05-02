@@ -16,6 +16,12 @@ class HidDevice {
 		this._outputReportByteLength := outputReportByteLength
 	}
 	
+	__Delete() {
+		if this._isOpen && this._hDevice {
+			Kernel32.CloseHandle(this._hDevice)
+		}
+	}
+	
 	InputBufferSize  => this._inputReportByteLength-1
 	OutputBufferSize => this._outputReportByteLength-1
 	DevicePath => this._devicePath
@@ -36,13 +42,18 @@ class HidDevice {
 	}
 	
 	; TODO: add docs
-	Write(array, &err) {
+	Write(arr, &err) {
 		if !IsSet(err) {
 			err := ""
 		}
 		
-		if array.Length == 0 || array.Length >= this._outputReportByteLength {
-			err := "Invalid buffer size"
+		if !(arr is Array) {
+			err := "Invalid parameter 'arr'.`nExpected: Array, got: " Type(arr)
+			return
+		}
+		
+		if arr.Length == 0 || arr.Length >= this._outputReportByteLength {
+			err := "Invalid array size. Max Length is: " this.OutputBufferSize
 			return
 		}
 		
@@ -65,7 +76,7 @@ class HidDevice {
 			
 			try {
 				writeOl := OVERLAPPED(hWriteEvent)
-				output := this._ToBuffer(array)
+				output := this._ToBuffer(arr)
 				
 				finished := Kernel32.WriteFile(this._hDevice, output, output.Size, &_, writeOl)
 				if finished {
