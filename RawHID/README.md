@@ -12,7 +12,7 @@ Just in case if your keyboard is powered by [Qmk Firmware](https://github.com/qm
 
 ## How to use
 
-### Including files
+### Including Lib
 
 #### First of all, copy and paste `RawHID` and `WinApi` folders to your [AHK Script Library Folders](https://www.autohotkey.com/docs/v2/Scripts.htm#lib).
 
@@ -31,7 +31,7 @@ Just in case if your keyboard is powered by [Qmk Firmware](https://github.com/qm
 }
 ```
 
-### Finding the device
+### Finding Device
 
 #### To find your device, call `HidDevices.FindDevice(...)`:
 
@@ -49,7 +49,7 @@ UsageID   := 0x61   ; The usage ID of the Raw HID interface
 UsagePage := 0xFF60 ; The usage page of the Raw HID interface
 
 
-^i:: {
+^i:: { ; Ctrl + i
 	device := HidDevices.FindDevice(VendorID, ProductID, UsageID, UsagePage, &err)
 	if err {
 		MsgBox("Error at finding the device: " err)
@@ -64,7 +64,7 @@ UsagePage := 0xFF60 ; The usage page of the Raw HID interface
 > Alternatively, you can use Device Manager on Windows.
 
 
-### Writing data
+### Writing Data
 
 #### To simply send the data to a device, call `.Write(...)` method:
 
@@ -93,7 +93,7 @@ UsagePage := 0xFF60 ; The usage page of the Raw HID interface
 > When sending multiple output data to a device in a row, the device should manually be opened and closed.
 
 
-### Reading data
+### Reading Data
 
 #### To read the data from the device, use `.Read(...)` method:
 
@@ -103,9 +103,11 @@ UsagePage := 0xFF60 ; The usage page of the Raw HID interface
 
 ```ahk
 ^i:: {
-	
-	; ... 
-	
+	device := HidDevices.FindDevice(VendorID, ProductID, UsageID, UsagePage, &err)
+	if err {
+		MsgBox("Error at finding device: " err)
+		return
+	}
 	
 	device.Open(&err)
 	if err {
@@ -114,7 +116,7 @@ UsagePage := 0xFF60 ; The usage page of the Raw HID interface
 	}
 	
 	try {
-		; Max length of an output buffer is device.OutputBufferSize (32 bytes if it's QMK device)
+		; Max Length of an output buffer is device.OutputBufferSize (32 if it's QMK device)
 		outputBuffer := [1, 2, 3, 4, 5]
 		
 		device.Write(outputBuffer, &err)
@@ -125,7 +127,7 @@ UsagePage := 0xFF60 ; The usage page of the Raw HID interface
 		
 		timeout := 1000 ; ms
 		
-		; The length of an input buffer is always device.InputBufferSize (32 bytes if it's QMK device)
+		; The return type is an Array and its Length is always device.InputBufferSize (32 if it's QMK device)
 		response := device.Read(timeout, &err)
 		if err {
 			MsgBox("Error at reading: " err)
@@ -146,3 +148,7 @@ UsagePage := 0xFF60 ; The usage page of the Raw HID interface
 ```
 > [!IMPORTANT]
 > When writing the data and reading the response, the device must be manually opened and closed after.<br>
+
+## TODO
+- add docs
+- add thread safety?
