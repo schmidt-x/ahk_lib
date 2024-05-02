@@ -2,11 +2,12 @@
 #Include <Common\Disposition>
 
 class ModeType {
-	static Normal => 1
-	static Insert => 2
-	static Symbol => 4
-	static Mouse  => 8
-	static Select => 16
+	static None   := 0
+	static Normal := 1
+	static Insert := 2
+	static Symbol := 4
+	static Mouse  := 8
+	static Select := 16
 }
 
 class Mode {
@@ -34,9 +35,9 @@ class Mode {
 	static IsInsert  => this._current == ModeType.Insert
 	static IsMouse   => this._current == ModeType.Mouse
 	static IsSelect  => this._current == ModeType.Select
-	static IsNSymbol => this._current == (ModeType.Normal | ModeType.Symbol)
-	static IsISymbol => this._current == (ModeType.Insert | ModeType.Symbol)
-	static IsSSymbol => this._current == (ModeType.Select | ModeType.Symbol)
+	static IsNSymbol => this._current == ModeType.Normal | ModeType.Symbol
+	static IsISymbol => this._current == ModeType.Insert | ModeType.Symbol
+	static IsSSymbol => this._current == ModeType.Select | ModeType.Symbol
 	
 	static __New() {
 		this._InitDisplay()
@@ -88,75 +89,17 @@ class Mode {
 		this._displayText.Redraw()
 	}
 	
+	static SetNormal() => this._SetMode(ModeType.Normal)
+	static SetInsert() => this._SetMode(ModeType.Insert)
+	static SetMouse()  => this._SetMode(ModeType.Mouse)
+	static SetSelect() => this._SetMode(ModeType.Select)
+	static SetNone()   => this._SetMode(ModeType.None)
+	
+	static AddSymbol() => this._AddMode(ModeType.Symbol)
+	static DelSymbol() => this._DelMode(ModeType.Symbol)
+	
 	static SetDefault() => this.SetNormal()
 	
-	static SetNormal() {
-		if this._current == ModeType.Normal {
-			return
-		}
-		
-		this._current := ModeType.Normal
-		this._DisplayNormal()
-	}
-	
-	static SetInsert() {
-		if this._current == ModeType.Insert {
-			return
-		}
-		
-		this._current := ModeType.Insert
-		this._DisplayInsert()
-	}
-	
-	static SetMouse() {
-		if this._current == ModeType.Mouse {
-			return
-		}
-		
-		this._current := ModeType.Mouse
-		this._DisplayMouse()
-	}
-	
-	static SetSelect() {
-		if this._current == ModeType.Select {
-			return
-		}
-		
-		this._current := ModeType.Select
-		this._DisplaySelect()
-	}
-	
-	static SetSymbol() {
-		if this._current & ModeType.Symbol {
-			return
-		}
-		
-		prevMode := this._current
-		this._current |= ModeType.Symbol
-		
-		switch prevMode {
-		case ModeType.Normal: this._DisplayNSymbol()
-		case ModeType.Insert: this._DisplayISymbol()
-		case ModeType.Select: this._DisplaySSymbol()
-		default: this._DisplayUndef()
-		}
-	}
-	
-	static UnsetSybmol() {
-		if not (this._current & ModeType.Symbol) {
-			return
-		}
-		
-		this._current &= ~ModeType.Symbol
-		
-		switch this._current {
-		case ModeType.Normal: this._DisplayNormal()
-		case ModeType.Insert: this._DisplayInsert()
-		case ModeType.Select: this._DisplaySelect()
-		default: this._DisplayUndef()
-		}
-	}
-
 	
 	; --- private ---
 	
@@ -198,17 +141,46 @@ class Mode {
 		this.SetDefault()
 	}
 	
-	static _DisplayNormal() => this._DisplayMode("Normal")
-	static _DisplayInsert() => this._DisplayMode("Insert")
-	static _DisplaySymbol() => this._DisplayMode("Symbol")
-	static _DisplayMouse()  => this._DisplayMode("Mouse")
-	static _DisplaySelect() => this._DisplayMode("Select")
+	static _SetMode(mode) {
+		if this._current == mode {
+			return
+		}
+		
+		this._current := mode
+		this._DisplayCurrentMode()
+	}
 	
-	static _DisplayNSymbol() => this._DisplayMode("N_Symb")
-	static _DisplayISymbol() => this._DisplayMode("I_Symb")
-	static _DisplaySSymbol() => this._DisplayMode("S_Symb")
+	static _AddMode(mode) {
+		if this._current & mode {
+			return
+		}
+		
+		this._current |= mode
+		this._DisplayCurrentMode()
+	}
 	
-	static _DisplayUndef() => this._DisplayMode("Undef")
+	static _DelMode(mode) {
+		if not (this._current & mode) {
+			return
+		}
+		
+		this._current &= ~mode
+		this._DisplayCurrentMode()
+	}
+	
+	static _DisplayCurrentMode() {
+		switch this._current {
+			case ModeType.Normal: this._DisplayMode("Normal")
+			case ModeType.Insert: this._DisplayMode("Insert")
+			case ModeType.Mouse:  this._DisplayMode("Mouse")
+			case ModeType.Select: this._DisplayMode("Select")
+			case ModeType.None:   this._DisplayMode("None")
+			case ModeType.Normal | ModeType.Symbol: this._DisplayMode("N_Symb")
+			case ModeType.Insert | ModeType.Symbol: this._DisplayMode("I_Symb")
+			case ModeType.Select | ModeType.Symbol: this._DisplayMode("S_Symb")
+			default: this._DisplayMode("Undef")
+		}
+	}
 	
 	static _DisplayMode(mode) {
 		this._displayText.Value := mode
