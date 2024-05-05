@@ -261,4 +261,60 @@ class Kernel32 {
 		return DllCall("kernel32\CancelIoEx", "Ptr", hFile, "Ptr", lpOverlapped)
 	}
 	
+	/**
+	 * Formats a message string.
+	 * 
+	 * @param {[in] DWORD} dwFlags
+	 * The formatting options, and how to interpret the `lpSource` parameter.
+	 * 
+	 * @param {[in, optional] LPCVOID} lpSource
+	 * The location of the message definition.
+	 * 
+	 * @param {[in] DWORD} dwMessageId
+	 * The message identifier for the requested message.
+	 * 
+	 * @param {[in] DWORD} dwLanguageId
+	 * The language identifier for the requested message.
+	 * 
+	 * @param {[out] LPTSTR} lpBuffer
+	 * A pointer to a buffer that receives the null-terminated string that specifies the formatted message.
+	 * 
+	 * @param {[in] DWORD} nSize
+	 * If the `FORMAT_MESSAGE_ALLOCATE_BUFFER` flag is not set, this parameter specifies the size of the output
+	 * buffer, in TCHARs.<br>
+	 * If `FORMAT_MESSAGE_ALLOCATE_BUFFER` is set, this parameter specifies the minimum number of TCHARs 
+	 * to allocate for an output buffer.
+	 * 
+	 * @param {[in, optional] va_list *} arguments
+	 * An array of values that are used as insert values in the formatted message.
+	 * 
+	 * @returns {Integer}
+	 * If the function succeeds, the return value is the number of TCHARs stored in the output buffer, excluding
+	 * the terminating null character.<br>
+	 * If the function fails, the return value is `0`.
+	 */
+	static FormatMessageW(dwFlags, lpSource, dwMessageId, dwLanguageId, &lpBuffer, nSize, arguments) {
+		return DllCall("kernel32\FormatMessageW",
+			"UInt", dwFlags,
+			"Ptr",  lpSource,
+			"UInt", dwMessageId,
+			"UInt", dwLanguageId,
+			"Ptr*", &lpBuffer:=0,
+			"UInt", nSize,
+			"Ptr",  arguments)
+	}
+	
+	/**
+	 * Frees the specified local memory object and invalidates its handle.
+	 * 
+	 * @param {[in] HLOCAL} hMem
+	 * A `handle` to the local memory object.
+	 * 
+	 * @returns {Integer}
+	 * If the function succeeds, the return value is `0`.<br>
+	 * If the function fails, the return value is equal to a `handle` to the local memory object.
+	 */
+	static LocalFree(hMem) {
+		return DllCall("kernel32\LocalFree", "Ptr", hMem, "Ptr")
+	}
 }

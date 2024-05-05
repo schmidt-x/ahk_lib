@@ -3,28 +3,34 @@
 #Include <WinApi\Dll\Hid>
 #Include <WinApi\Constants>
 #Include <WinApi\Structs>
+
 #Include <RawHID\HidDevice>
+#Include <RawHID\Helpers>
 
 class HidDevices {
 	
 	; TODO: add docs
-	static FindDevice(vendorId, productId, usageId, usagePage, &err) {
+	static Find(vendorId, productId, usageId, usagePage, &err) {
 		if !IsSet(err) {
 			err := ""
 		}
 		
-		devicePaths := this._ListDevicePaths(&pathErr)
-		if pathErr {
-			err := "Failed at listing devices: " pathErr
+		devicePaths := this._ListDevicePaths(&err)
+		if err {
 			return ""
 		}
 		
 		if devicePaths.Length == 0 {
-			err := "No device is present"
+			err := Error("No device is present.")
 			return ""
 		}
 		
 		hidModule := Kernel32.LoadLibraryW(Hid.Name)
+		if not hidModule {
+			errorCode := A_LastError
+			err := OSErrorC("Failed to load " Hid.Name " library: " GetErrorMessage(), errorCode)
+			return ""
+		}
 		
 		try {
 			for devicePath in devicePaths {
@@ -71,18 +77,24 @@ class HidDevices {
 						return HidDevice(devicePath, caps.GetInputReportByteLength(), caps.GetOutputReportByteLength())
 						
 					} finally {
-						Hid.HidD_FreePreparsedData(preparsedData)
+						if not Hid.HidD_FreePreparsedData(preparsedData) {
+							; TODO: to log
+						}
 					}
 				} finally {
-					Kernel32.CloseHandle(hDevice)
+					if not Kernel32.CloseHandle(hDevice) {
+						; TODO: to log
+					}
 				}
 			}
 			
-			err := "Device not found"
+			err := Error("Device not found.")
 			return ""
 			
 		} finally {
-			Kernel32.FreeLibrary(hidModule)
+			if not Kernel32.FreeLibrary(hidModule) {
+				; TODO: to log
+			}
 		}
 	}
 	
@@ -96,11 +108,17 @@ class HidDevices {
 		Hid.HidD_GetHidGuid(hidGuid)
 		
 		hModule := Kernel32.LoadLibraryW(SetupApi.Name)
+		if not hModule {
+			errorCode := A_LastError
+			err := OSErrorC("Failed to load " SetupApi.Name " library: " GetErrorMessage(), errorCode)
+			return ""
+		}
 		
 		try {
 			hDevInfoSet := SetupApi.SetupDiGetClassDevsW(hidGuid, 0, 0, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT)
 			if hDevInfoSet == INVALID_HANDLE_VALUE {
-				err := "Failed to get Device Information Set. Error code: " A_LastError
+				errorCode := A_LastError
+				err := OSErrorC("Failed to get Device Information Set: " GetErrorMessage(), errorCode)
 				return ""
 			}
 			
@@ -112,6 +130,11 @@ class HidDevices {
 				while SetupApi.SetupDiEnumDeviceInterfaces(hDevInfoSet, 0, hidGuid, mIndex, devInterfaceData) {
 					
 					_ := SetupApi.SetupDiGetDeviceInterfaceDetailW(hDevInfoSet, devInterfaceData, 0, 0, &requiredSize, 0)
+					
+					if A_LastError != ERROR_INSUFFICIENT_BUFFER {
+						; TODO: to log
+						continue
+					}
 					
 					devInterfaceDetailData := SP_DEVICE_INTERFACE_DETAIL_DATA(requiredSize)
 					
@@ -134,10 +157,14 @@ class HidDevices {
 				return devicePathList
 				
 			} finally {
-				SetupApi.SetupDiDestroyDeviceInfoList(hDevInfoSet)
+				if not SetupApi.SetupDiDestroyDeviceInfoList(hDevInfoSet) {
+					; TODO: to log
+				}
 			}
 		} finally {
-			Kernel32.FreeLibrary(hModule)
+			if not Kernel32.FreeLibrary(hModule) {
+				; TODO: to log
+			}
 		}
 	}
 }

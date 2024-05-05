@@ -1,6 +1,10 @@
+#Include <WinApi\Errors\OSErrorC>
 #Include <WinApi\Dll\Kernel32>
 #Include <WinApi\Constants>
 #Include <WinApi\Structs>
+
+#Include <RawHID\Helpers>
+
 
 class HidDevice {
 	_inputReportByteLength  := unset
@@ -48,12 +52,17 @@ class HidDevice {
 		}
 		
 		if !(arr is Array) {
-			err := "Invalid parameter 'arr'.`nExpected: Array, got: " Type(arr)
+			err := TypeError("Invalid parameter type for 'arr'. Expected: Array, got: " Type(arr) ".")
 			return
 		}
 		
-		if arr.Length == 0 || arr.Length >= this._outputReportByteLength {
-			err := "Invalid array size. Max Length is: " this.OutputBufferSize
+		if arr.Length == 0 {
+			err := ValueError("Empty array.")
+			return
+		}
+		
+		if arr.Length >= this._outputReportByteLength {
+			err := ValueError(Format("Invalid array size. Max Length is: {1}, got: {2}.", this.OutputBufferSize, arr.Length))
 			return
 		}
 		
@@ -70,7 +79,8 @@ class HidDevice {
 		try {
 			hWriteEvent := Kernel32.CreateEventW(0, true, false, 0)
 			if not hWriteEvent {
-				err := "Failed to create a writing event. Error code: " A_LastError
+				errorCode := A_LastError
+				err := OSErrorC("Failed to create WriteEvent: " GetErrorMessage(), errorCode)
 				return
 			}
 			
@@ -85,7 +95,8 @@ class HidDevice {
 				}
 				
 				if A_LastError != ERROR_IO_PENDING {
-					err := "Failed to write into the device. Error code: " A_LastError
+					errorCode := A_LastError
+					err := OSErrorC("Failed to write: " GetErrorMessage(), errorCode)
 					return
 				}
 				
@@ -94,16 +105,27 @@ class HidDevice {
 				switch waitResult {
 					case WAIT_OBJECT_0:
 						return
+					
 					case WAIT_TIMEOUT:
-						Kernel32.CancelIoEx(this._hDevice, writeOl)
-						err := "Timed out"
-					case WAIT_ABANDONED:
-						err := "Asynchronous write operation has been abandoned"
+						if not Kernel32.CancelIoEx(this._hDevice, writeOl) {
+							; TODO: to log
+						}
+						err := TimeoutError("Writing timed out.")
+						
 					case WAIT_FAILED:
-						err := "Failed at waiting for the asynchronously writing operation. Error code: " A_LastError
+						errorCode := A_LastError
+						err := OSErrorC("Failed to wait for writing: " GetErrorMessage(), errorCode)
+					
+					default:
+						throw Error("Shouldn't reach here.")
 				}
+				
+				return
+				
 			} finally {
-				Kernel32.CloseHandle(hWriteEvent)
+				if not Kernel32.CloseHandle(hWriteEvent) {
+					; TODO: to log
+				}
 			}
 		} finally {
 			if shouldClose {
@@ -119,14 +141,14 @@ class HidDevice {
 		}
 		
 		if timeout < 0 {
-			err := "Invalid timeout"
-			return
+			err := ValueError("Parameter 'timeout' must not have a negative value.")
+			return ""
 		}
 		
 		if !this._isOpen {
 			this._Open(GENERIC_READ, &err)
 			if err {
-				return
+				return ""
 			}
 			shouldClose := true
 		} else {
@@ -136,8 +158,9 @@ class HidDevice {
 		try {
 			hReadEvent := Kernel32.CreateEventW(0, true, false, 0)
 			if not hReadEvent {
-				err := "Failed to create a reading event. Error code: " A_LastError
-				return
+				errorCode := A_LastError
+				err := OSErrorC("Failed to create ReadEvent: " GetErrorMessage(), errorCode)
+				return ""
 			}
 			
 			try {
@@ -151,8 +174,9 @@ class HidDevice {
 				}
 				
 				if A_LastError != ERROR_IO_PENDING {
-					err := "Failed to read from the device. Error code: " A_LastError
-					return
+					errorCode := A_LastError
+					err := OSErrorC("Failed to read: " GetErrorMessage(), errorCode)
+					return ""
 				}
 				
 				waitResult := Kernel32.WaitForSingleObject(hReadEvent, timeout)
@@ -160,16 +184,27 @@ class HidDevice {
 				switch waitResult {
 					case WAIT_OBJECT_0:
 						return this._ToArray(input)
+					
 					case WAIT_TIMEOUT:
-						Kernel32.CancelIoEx(this._hDevice, readOl)
-						err := "Timed out"
-					case WAIT_ABANDONED:
-						err := "Asynchronous read operation has been abandoned"
+						if not Kernel32.CancelIoEx(this._hDevice, readOl) {
+							; TODO: to log
+						}
+						err := TimeoutError("Reading timed out.")
+					
 					case WAIT_FAILED:
-						err := "Failed at waiting for the asynchronously reading operation. Error code: " A_LastError
+						errorCode := A_LastError
+						err := OSErrorC("Failed to wait for reading: " GetErrorMessage(), errorCode)
+					
+					default:
+						throw Error("Shouldn't reach here.")
 				}
+				
+				return ""
+				
 			} finally {
-				Kernel32.CloseHandle(hReadEvent)
+				if not Kernel32.CloseHandle(hReadEvent) {
+					; TODO: to log
+				}
 			}
 		} finally {
 			if shouldClose {
@@ -180,11 +215,18 @@ class HidDevice {
 	
 	; TODO: add docs
 	Close() {
+		if !IsSet(err) {
+			err := ""
+		}
+		
 		if !this._isOpen {
 			return
 		}
 		
-		_ := Kernel32.CloseHandle(this._hDevice)
+		if not Kernel32.CloseHandle(this._hDevice) {
+			; TODO: to log
+		}
+		
 		this._isOpen := false
 		this._hDevice := -1
 	}
@@ -202,7 +244,12 @@ class HidDevice {
 			FILE_FLAG_OVERLAPPED, 0)
 		
 		if hDevice == INVALID_HANDLE_VALUE {
-			err := "Failed to open the device: " A_LastError
+			errorCode := A_LastError
+			
+			err := OSErrorC("Failed to open a device: " (errorCode == ERROR_FILE_NOT_FOUND 
+				? "Device not found."
+				: GetErrorMessage()), errorCode)
+				
 			return
 		}
 		
