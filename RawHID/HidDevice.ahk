@@ -3,6 +3,7 @@
 #Include <WinApi\Constants>
 #Include <WinApi\Structs>
 
+#Include <RawHID\HidDeviceInfo>
 #Include <RawHID\Helpers>
 
 
@@ -14,10 +15,13 @@ class HidDevice {
 	_hDevice := -1
 	_isOpen := false
 	
-	__New(devicePath, inputReportByteLength, outputReportByteLength) {
-		this._devicePath := devicePath
-		this._inputReportByteLength := inputReportByteLength
-		this._outputReportByteLength := outputReportByteLength
+	/**
+	 * @param {HidDeviceInfo} deviceInfo
+	 */
+	__New(deviceInfo) {
+		this._devicePath := deviceInfo.DevicePath
+		this._inputReportByteLength := deviceInfo.InputReportByteLength
+		this._outputReportByteLength := deviceInfo.OutputReportByteLength
 	}
 	
 	__Delete() {
@@ -28,8 +32,6 @@ class HidDevice {
 	
 	InputBufferSize  => this._inputReportByteLength-1
 	OutputBufferSize => this._outputReportByteLength-1
-	DevicePath => this._devicePath
-	IsOpen => this._isOpen
 	
 	
 	; TODO: add docs

@@ -1,10 +1,11 @@
+#Include <WinApi\Errors\OSErrorC>
 #Include <WinApi\Dll\Kernel32>
 #Include <WinApi\Dll\SetupAPI>
 #Include <WinApi\Dll\Hid>
 #Include <WinApi\Constants>
 #Include <WinApi\Structs>
 
-#Include <RawHID\HidDevice>
+#Include <RawHID\HidDeviceInfo>
 #Include <RawHID\Helpers>
 
 class HidDevices {
@@ -74,7 +75,14 @@ class HidDevices {
 							continue
 						}
 						
-						return HidDevice(devicePath, caps.GetInputReportByteLength(), caps.GetOutputReportByteLength())
+						return HidDeviceInfo(
+							devicePath,
+							caps.GetInputReportByteLength(),
+							caps.GetOutputReportByteLength(),
+							vendorId,
+							productId,
+							usageId,
+							usagePage)
 						
 					} finally {
 						if not Hid.HidD_FreePreparsedData(preparsedData) {
