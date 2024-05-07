@@ -6,11 +6,22 @@ class CommandRunner {
 	
 	static _console := Gui()
 	
+	static _commands := Map()
+	
 	/**
 	 * @type {Gui.Control}
 	 */
 	static _consoleEdit     := unset
 	static _consoleEditHwnd := unset
+	
+	static _xPos := A_ScreenWidth / 2
+	static _yPos := A_ScreenHeight / 100 * 20
+	
+	static _xDisposition := Disposition.Centered
+	static _yDisposition := Disposition.Centered
+	
+	static _width  := 800
+	static _height := 32
 	
 	/**
 	 * @type {Gui.Control}
@@ -20,19 +31,9 @@ class CommandRunner {
 	static _errorEditHeight := 350
 	static _errorEditPaddY  := 15
 	
-	static _commands := Map()
-	static _prevWinHwnd := 0
-	
-	static _xDisposition := Disposition.Centered
-	static _yDisposition := Disposition.Centered
-	
-	static _xPos := A_ScreenWidth / 2
-	static _yPos := A_ScreenHeight / 100 * 20
-	
-	static _width  := 800
-	static _height := 32
-	
 	static _escaped := false
+	static _prevWinHwnd := 0
+	static _isRunning := false
 	
 	
 	static IsActive => WinActive(this._console.Hwnd)
@@ -48,6 +49,7 @@ class CommandRunner {
 	
 	static Open() {
 		this._prevWinHwnd := WinExist("A")
+		this._consoleEdit.Visible := true
 		this._console.Show()
 	}
 	
@@ -128,38 +130,35 @@ class CommandRunner {
 	}
 	
 	static _OnACTIVATE(wParam, lParam, msg, hwnd) {
-		if wParam != WA_INACTIVE || hwnd != this._console.Hwnd {
+		if hwnd != this._console.Hwnd || wParam != WA_INACTIVE {
 			return
 		}
 		
-		if not this._escaped {
-			; If we just lost the focus of a console (didn't press Esc),
-			; just minimize it without clearing.
-			this._console.Hide()
-		} else {
+		if this._escaped {
+			; If a focus was lost by pressing Escape, the console is already cleared and hidden.
 			this._escaped := false
+		} else {
+			; Otherwise, just minimize the console without clearing.
+			
+			; Without clearing - unless an executing command has stolen the focus.
+			if this._isRunning {
+				this._ClearAndSetInvisible()
+			}
+			
+			this._console.Hide()
 		}
 	}
 	
 	; TODO: add docs
 	static _Close() {
-		this._consoleEdit.Value := ""
+		this._ClearAndSetInvisible()
 		
-		if this._errorEdit.Visible {
-			this._errorEdit.Value := ""
-			this._errorEdit.Visible := false
-		}
-		
-		this._console.Hide()
-		
-		; Sometimes, the focus might be stolen by FileExplorer. Or if we were
-		; focused on the desktop before opening the terminal, focus will not 
-		; be returned back to the desktop, if we have any window opened.
-		; Hence, we explicitly activate the previous window (if any).
 		if this._prevWinHwnd && WinExist(this._prevWinHwnd) {
 			WinActivate(this._prevWinHwnd)
 			this._prevWinHwnd := 0
 		}
+		
+		this._console.Hide()
 	}
 	
 	; TODO: add docs
@@ -179,15 +178,23 @@ class CommandRunner {
 			return
 		}
 		
-		func(&args, this._prevWinHwnd, &(err := ""))
+		this._isRunning := true
+		try {
+			func(&args, this._prevWinHwnd, &err:="")
+		} finally {
+			this._isRunning := false
+		}
+		
 		if err {
 			this._DisplayError(err)
 			return
 		}
 		
-		this._consoleEdit.Value := ""
+		if this._consoleEdit.Visible {
+			this._consoleEdit.Value := ""
+		}
 		
-		if (this._errorEdit.Visible) {
+		if this._errorEdit.Visible {
 			this._HideError()
 		}
 		
@@ -199,6 +206,16 @@ class CommandRunner {
 			
 			command := parts[1]
 			args := parts.Length == 2 ? parts[2] : ""
+		}
+	}
+	
+	static _ClearAndSetInvisible() {
+		this._consoleEdit.Value := ""
+		this._consoleEdit.Visible := false
+		
+		if this._errorEdit.Visible {
+			this._errorEdit.Value := ""
+			this._errorEdit.Visible := false
 		}
 	}
 	
