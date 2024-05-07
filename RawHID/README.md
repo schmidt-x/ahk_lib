@@ -1,14 +1,17 @@
 # Raw HID
 
-## Note
+## Introduction
 
-This is not a complete HID library or something like it.
+This is not a complete HID communication library. It's key, and only, functionalities are simply writing to and reading from a HID device.
 
-It's just calling a few WinApi functions, to send/receive raw input data to/from a device, and that's it.
+It's been written to use with the devices that natively support handling raw input/output data. As an example of those, any keyboard that's powered by [QMK Firmware](https://github.com/qmk/qmk_firmware) can handle (send and receive) raw data using [RawHID Feature](https://docs.qmk.fm/#/feature_rawhid).
 
 [Introduction to Human Interface Devices (HID)](https://learn.microsoft.com/en-us/windows-hardware/drivers/hid/)
 
-Just in case if your keyboard is powered by [Qmk Firmware](https://github.com/qmk/qmk_firmware) (like mine) and supports handling raw input data: [Raw HID Feature](https://docs.qmk.fm/#/feature_rawhid)
+As an example, you can take a look at the communication between the host (my PC) and the device (my keyboard):
+- [PC](https://github.com/schmidt-x/Ahk_Lib/tree/main/Keyboards/I44.ahk)
+- [Keyboard]() TODO
+
 
 ## How to use
 
@@ -34,8 +37,9 @@ Then, include `HidDevices` and `HidDevice` files to your main script:
 
 ### Finding Device
 
-To find your device, call `HidDevices.Find(...)`.
-This method returns `HidDeviceInfo` object, that contains the device specific information.
+To find your device, call `HidDevices.Find(...)`. 
+
+This method returns `HidDeviceInfo` object, that contains the device specific information:
 
 ```ahk
 #Requires AutoHotkey v2.0
@@ -82,7 +86,7 @@ To simply send data to a device, call `.Write(...)` method:
 ^i:: {
   device := HidDevice(DeviceInfo)
 	
-  ; Max Length of an output buffer is device.OutputBufferSize (32 if it's QMK device)
+  ; Max Length of an output buffer is device.OutputBufferSize (32, if it's QMK device)
   outputBuffer := [1, 2, 3, 4, 5]
 	
   device.Write(outputBuffer, &err)
@@ -104,8 +108,7 @@ To simply send data to a device, call `.Write(...)` method:
 To read data from a device, use `.Read(...)` method:
 
 > [!IMPORTANT]
-> Usage of `MsgBox()` is for demonstration purposes only.<br>
-> Personally, I do not recommend to use it for simply displaying errors, while there is a handle (or anythig that should be closed/released/freed) waiting for it to close, since `MsgBox()` blocks the executing thread until you close the dialog window.
+> When writing data and reading the response, the device **must** be manually opened and closed after.
 
 ```ahk
 ^i:: {
@@ -120,10 +123,7 @@ To read data from a device, use `.Read(...)` method:
   response := unset
 	
   try {
-    ; Max Length of an output buffer is device.OutputBufferSize (32 if it's QMK device)
-    outputBuffer := [1, 2, 3, 4, 5]
-    
-    device.Write(outputBuffer, &err)
+    device.Write([1, 2, 3, 4, 5], &err)
     if err {
       MsgBox("Error at writing: " err.Message)
       return
@@ -131,7 +131,7 @@ To read data from a device, use `.Read(...)` method:
 
     timeout := 1000 ; ms
 
-    ; The return type is an Array and its Length is always device.InputBufferSize (32 if it's QMK device)
+    ; The return type is an Array and its Length is always device.InputBufferSize (32, if it's QMK device)
     response := device.Read(timeout, &err)
     if err {
       if err is TimeoutError { ; true if it's timed out
@@ -154,5 +154,6 @@ To read data from a device, use `.Read(...)` method:
   MsgBox(msg)
 }
 ```
-> [!IMPORTANT]
-> When writing the data and reading the response, the device **must** be manually opened and closed after.
+> [!NOTE]
+> Usage of `MsgBox()` is for demonstration purposes only.<br>
+> Personally, I do not recommend to use it for simply displaying errors, while there is a handle (or anythig that should be closed/released/freed) waiting for it to close, since `MsgBox()` blocks the executing thread until you close the dialog window.
