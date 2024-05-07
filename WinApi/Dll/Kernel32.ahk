@@ -317,4 +317,33 @@ class Kernel32 {
 	static LocalFree(hMem) {
 		return DllCall("kernel32\LocalFree", "Ptr", hMem, "Ptr")
 	}
+	
+	/**
+	 * Retrieves the current value of the performance counter, which is a high resolution (<1us)
+	 * time stamp that can be used for time-interval measurements.
+	 * 
+	 * @param lpPerformanceCount
+	 * A pointer to a variable that receives the current performance-counter value, in counts.
+	 * 
+	 * @returns {Boolean}
+	 * If the function succeeds, the return value is `true`; otherwise `false`.
+	 */
+	static QueryPerformanceCounter(&lpPerformanceCount) {
+		return DllCall("QueryPerformanceCounter", "Int64*", &lpPerformanceCount:=0)
+	}
+	
+	/**
+	 * Retrieves the frequency of the performance counter.
+	 * 
+	 * @param lpFrequency
+	 * A pointer to a variable that receives the current performance-counter frequency, in counts
+	 * per second.
+	 * 
+	 * @returns {Boolean}
+	 * If the installed hardware supports a high-resolution performance counter, the return value
+	 * is `true`. Otherwise `false`.
+	 */
+	static QueryPerformanceFrequency(&lpFrequency) {
+		return DllCall("QueryPerformanceFrequency", "Int64*", &lpFrequency:=0)
+	}
 }
