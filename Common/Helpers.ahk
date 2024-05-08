@@ -45,6 +45,12 @@ MoveCursorToFileBeginning() => SendInput("^{Home}")
 
 MoveCursorToFileEnd() => SendInput("^{End}")
 
+ThrowIfError(err) {
+	if err {
+		throw err
+	}
+}
+
 
 ; --- Blind Input ---
 	

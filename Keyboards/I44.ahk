@@ -1,6 +1,7 @@
 #Include <RawHID\HidDevices>
 #Include <RawHID\HidDevice>
 #Include <Common\StopWatch>
+#Include <Keyboards\HidConstants>
 
 class I44 {
 	static _vendorID  := 0xFEED
@@ -24,11 +25,11 @@ class I44 {
 	}
 	
 	static EnableAhk(&err) {
-		this._NewDevice().Write([1, 1], &err)
+		this._NewDevice().Write([HID_AHK, 1], &err)
 	}
 	
 	static DisableAhk(&err) {
-		this._NewDevice().Write([1, 0], &err)
+		this._NewDevice().Write([HID_AHK, 0], &err)
 	}
 	
 	static Ping(&ms) {
@@ -47,7 +48,7 @@ class I44 {
 		}
 		
 		try {
-			device.Write([255], &err)
+			device.Write([HID_PING], &err)
 			if err {
 				return false
 			}

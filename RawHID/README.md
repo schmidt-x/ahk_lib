@@ -10,7 +10,7 @@ It's been written to use with the devices that natively support handling raw inp
 
 As an example, you can take a look at the communication between the host (my PC) and the device (my keyboard):
 - [PC](https://github.com/schmidt-x/Ahk_Lib/tree/main/Keyboards/I44.ahk)
-- [Keyboard]() TODO
+- Keyboard: [keymap.c](https://github.com/schmidt-x/qmk_firmware/blob/schmidt-x/keyboards/ergohaven/imperial44/keymaps/schmidt-x/keymap.c#L344) and [hid.c](https://github.com/schmidt-x/qmk_firmware/blob/schmidt-x/users/schmidt-x/hid.c)
 
 
 ## How to use
