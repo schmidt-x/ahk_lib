@@ -24,15 +24,6 @@ class OperaGX {
 	; --- Shortcuts ---
 	
 	/*
-		Sometimes, it triggers Context Menu on Alt release. Holding Shift helps to prevent it (so far).
-		Make sure that the outer hotkey has Shift in it. 
-		If it doesn't, manually register Shift Down before releasing Alt.
-		
-		Example:
-			Instead of: SendInput("!1")
-			Do: SendInput("{Alt Down}1{Shift Down}{Alt Up}{Shift Up}").
-	
-		
 		Extensions used:
 		- Enhancer for YouTube™ (https://www.mrfdev.com/enhancer-for-youtube)
 	*/

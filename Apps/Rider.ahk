@@ -5,7 +5,7 @@
 class Rider {
 	static _processName     := "rider64.exe"
 	static _winProcessName  := "ahk_exe " this._processName
-	static _fullProcessName := Paths.LocalPrograms "\Rider\bin\ " this._processName
+	static _fullProcessName := Paths.LocalPrograms "\Rider\bin\" this._processName
 	
 	static _projects := Map()
 	
