@@ -1,17 +1,77 @@
-; TODO
-
+#Include <System\Paths>
 #Include <Misc\CommandRunner>
+#Include <Common\Helpers>
 
 class WindowsTerminal {
 	static _processName     := "WindowsTerminal.exe"
 	static _winProcessName  := "ahk_exe " this._processName
-	static _FullProcessName := "??"
+	static _fullProcessName := "C:\Users\Stefano\AppData\Local\Microsoft\WindowsApps\wt.exe"
 	
 	static __New() {
-		CommandRunner.AddCommands("term", this.Run.Bind(this))
+		CommandRunner.AddCommands("wt", this.Open.Bind(this))
 	}
 	
-	static Run(&args, &err) {
-		MsgBox("TODO")
+	static IsActive => WinActive(this._winProcessName)
+	
+	static Open(&args, hwnd, &err) {
+		if StrIsEmptyOrWhiteSpace(args) {
+			Run(this._fullProcessName)
+			return
+		}
+		
+		if args == "." {
+			if !Paths.TryGet(&path, hwnd) {
+				err := "Path not found."
+				return
+			}
+			
+			Run(Format('{1} -d "{2}"', this._fullProcessName, path))
+			return
+		}
+		
+		if !Paths.TryGetFolderPath(args, &path) {
+			err := "Folder not found."
+			return
+		}
+		
+		Run(Format('{1} -d "{2}"', this._fullProcessName, path))
 	}
+	
+	
+	; --- Shortcuts ---
+	
+	static DuplicateTab() => SendInput("+^d")
+	
+	static NewTab() => SendInput("+^t")
+	
+	static ClosePane() => SendInput("+^w")
+	
+	static NextTab() => SendInput("^{Tab}")
+	
+	static PreviousTab() => SendInput("+^{Tab}")
+	
+	static OpenSettings() => SendInput("^,")
+	
+	static SwitchToTab0() => SendInput("!^1")
+	
+	static SwitchToTab1() => SendInput("!^2")
+	
+	static SwitchToTab2() => SendInput("!^3")
+	
+	static SwitchToTab3() => SendInput("!^4")
+	
+	static SwitchToTab4() => SendInput("!^5")
+	
+	static SwitchToTab5() => SendInput("!^6")
+	
+	static SwitchToLastTab() => SendInput("!^9")
+	
+	static ScrollUp() => SendInput("+^{Up}")
+	
+	static ScrollDown() => SendInput("+^{Down}")
+	
+	static ScrollPageUp() => SendInput("+^{PgUp}")
+	
+	static ScrollPageDown() => SendInput("+^{PgDn}")
+	
 }

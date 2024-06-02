@@ -112,7 +112,7 @@ class VsCode {
 		; command: workbench.action.terminal.toggleTerminal
 		; reason: focuses Qmk Msys instead
 		; default: ^` (ctrl + `)
-		SendInput("!1")
+		SendInput("+!2")
 	}
 	
 	; --- ---

@@ -59,3 +59,7 @@ SendBlindUp() => SendInput("{Blind}{Up}")
 SendBlindDown() => SendInput("{Blind}{Down}")
 
 SendBlindEnter() => SendInput("{Blind}{Enter}")
+
+SendBlindLeft() => SendInput("{Blind}{Left}")
+
+SendBlindRight() => SendInput("{Blind}{Right}")

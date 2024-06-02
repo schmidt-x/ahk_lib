@@ -8,3 +8,4 @@
 #Include <Apps\Steam>
 #Include <Apps\Telegram>
 #Include <Apps\VsCode>
+#Include <Apps\WindowsTerminal>
