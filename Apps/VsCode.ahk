@@ -41,12 +41,15 @@ class VsCode {
 	}
 	
 	static OpenSelected(&err) {
-		path := Paths.GetSelected(&err)
+		selectedPaths := Paths.GetSelected(&err)
 		if err {
 			return
 		}
 		
-		Run(Format('"{1}" {2}', this._fullProcessName, path))
+		maxPaths := 3
+		loop Min(maxPaths, selectedPaths.Length) {
+			Run(Format('"{1}" {2}', this._fullProcessName, selectedPaths[A_Index]))
+		}
 	}
 	
 	

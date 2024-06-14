@@ -19,9 +19,14 @@ class Paths {
 	static QmkKbK02     := this.QmkKeyboards "\ergohaven\k02"
 	static QmkUsersMe   := this.QmkUsers "\schmidt-x"
 	
-	static LocalPrograms := this.User "\AppData\Local\Programs"
+	static AppData  := this.User "\AppData"
+	static Local    := this.AppData "\Local"
+	static LocalLow := this.AppData "\LocalLow"
+	static Roaming  := this.AppData "\Roaming" ; A_AppData
 	
-	static VsCodeUser := A_AppData "\Code\User"
+	static LocalPrograms := this.Local "\Programs"
+	
+	static VsCodeUser := this.Roaming "\Code\User"
 	static AhkLib     := A_MyDocuments "\AutoHotkey\Lib"
 	
 	
@@ -117,30 +122,26 @@ class Paths {
 	}
 	
 	/**
-	 * Retrieves the path of the selected file/folder in File Explorer
-	 * @param {&String} err
-	 * Error message is assigned if no file/folder was selected
-	 * @returns {String}
-	 * A string containing the selected path. If no file/folder
-	 * **was** selected, an empty string is returned
+	 * Retrieves path(s) of selected file(s)/folder(s) in File Explorer
+	 * @param {&Error} err
+	 * `Error` is assigned if no file/folder were selected
+	 * @returns {Array}
+	 * Paths to selected file(s)/folder(s)
 	 */
 	static GetSelected(&err) {
-		if !IsSet(err) {
-			err := ""
-		}
-		
 		prevClip := ClipboardAll()
 		A_Clipboard := ""
 		SendInput("+^c")
 		
 		if not ClipWait(0.5) {
-			err := "timed out"
-			path := ""
+			err := Error("No file/folder were selected.")
+			paths := ""
 		} else {
-			path := A_Clipboard
+			err := ""
+			paths := StrSplit(A_Clipboard, "`r`n")
 		}
 		
 		SetTimer(() => A_Clipboard := prevClip, -50)
-		return path
+		return paths
 	}
 }

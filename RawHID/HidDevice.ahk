@@ -217,10 +217,6 @@ class HidDevice {
 	
 	; TODO: add docs
 	Close() {
-		if !IsSet(err) {
-			err := ""
-		}
-		
 		if !this._isOpen {
 			return
 		}
