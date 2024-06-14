@@ -34,7 +34,7 @@ class I44 {
 	
 	/**
 	 * Checks if a keyboard is resposive and measures the ReadWrite time by simply sending `HID_PING`
-	 * output to the keyboard and waiting for the response.
+	 * output (with the current time) to the keyboard and waiting for the response.
 	 * @param {&Integer} ms On success, the measured time (in milliseconds) is stored. -1 otherwise.
 	 * @returns {Boolean} `True` if the keyboard is responsive. `False` if not or timed out.
 	 */
@@ -52,7 +52,14 @@ class I44 {
 		}
 		
 		try {
-			device.Write([HID_PING], &err)
+			timeParts := StrSplit(FormatTime(, "hh tt"), A_Space)
+			
+			hours   := timeParts[1]
+			minutes := A_Min
+			seconds := A_Sec
+			isPM    := timeParts[2] == "PM"
+			
+			device.Write([HID_PING, hours, minutes, seconds, isPM], &err)
 			if err {
 				return false
 			}

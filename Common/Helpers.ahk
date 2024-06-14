@@ -51,6 +51,39 @@ ThrowIfError(err) {
 	}
 }
 
+DragWindow() {
+	MouseGetPos(&prevMouseX, &prevMouseY, &winHWND)
+	
+	if WinGetMinMax(winHWND) { ; Only if the window isn't maximized
+		return
+	}
+	
+	WinGetPos(&prevWinX, &prevWinY,,, winHWND)
+	
+	prevWinDelay := A_WinDelay
+	SetWinDelay(-1)
+	
+	loop {
+		MouseGetPos(&mouseX, &mouseY)
+		newWinX := prevWinX + mouseX - prevMouseX
+		newWinY := prevWinY + mouseY - prevMouseY
+		
+		WinMove(newWinX, newWinY, , , winHWND)
+		
+		prevMouseX := mouseX
+		prevMouseY := mouseY
+		
+		prevWinX := newWinX
+		prevWinY := newWinY
+		
+		if !GetKeyState("LButton", "P") {
+			break
+		}
+	}
+	
+	SetWinDelay(prevWinDelay)
+}
+
 
 ; --- Blind Input ---
 	
