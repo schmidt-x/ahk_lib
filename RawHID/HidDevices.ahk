@@ -12,9 +12,7 @@ class HidDevices {
 	
 	; TODO: add docs
 	static Find(vendorId, productId, usageId, usagePage, &err) {
-		if !IsSet(err) {
-			err := ""
-		}
+		err := ""
 		
 		devicePaths := this._ListDevicePaths(&err)
 		if err {
@@ -108,10 +106,6 @@ class HidDevices {
 	
 	; TODO: add docs
 	static _ListDevicePaths(&err) {
-		if !IsSet(err) {
-			err := ""
-		}
-		
 		hidGuid := Buffer(16)
 		Hid.HidD_GetHidGuid(hidGuid)
 		

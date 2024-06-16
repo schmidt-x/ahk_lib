@@ -36,9 +36,7 @@ class HidDevice {
 	
 	; TODO: add docs
 	Open(&err) {
-		if !IsSet(err) {
-			err := ""
-		}
+		err := ""
 		
 		if this._isOpen {
 			return
@@ -49,9 +47,7 @@ class HidDevice {
 	
 	; TODO: add docs
 	Write(arr, &err) {
-		if !IsSet(err) {
-			err := ""
-		}
+		err := ""
 		
 		if !(arr is Array) {
 			err := TypeError("Invalid parameter type for 'arr'. Expected: Array, got: " Type(arr) ".")
@@ -138,9 +134,7 @@ class HidDevice {
 	
 	; TODO: add docs
 	Read(timeout, &err) {
-		if !IsSet(err) {
-			err := ""
-		}
+		err := ""
 		
 		if timeout < 0 {
 			err := ValueError("Parameter 'timeout' must not have a negative value.")
