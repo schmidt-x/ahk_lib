@@ -71,14 +71,27 @@ if err {
 > Alternatively, you can use Device Manager on Windows.
 
 
-### Writing Data
+### Communication
 
-To communicate with the device, you need to instantiate a `HidDevice` class, passing `DeviceInfo`:
+To communicate with the device, you need to instantiate a `HidDevice` class, passing `HidDeviceInfo` object, that is returned by `.Find(...)`:
 
 ```ahk
 device := HidDevice(DeviceInfo)
-
 ```
+`HidDevice` class has 4 methods:
+- `Open(err: &Error[, desiredAccess: Integer])`
+- `Write(output: Array, err: &Error)`
+- `Read(timeout: Integer, err: &Error) -> Array`
+- `Close()`
+
+> [!NOTE]
+> Both `Write` and `Read` open the device and close it after, if the device was not initially opened.<br>
+> However, for repetitive calls, it's recommended to once manually open the device, read/write, and close it after.
+
+> [!IMPORTANT]
+> When writing the data and reading the immediate response, the device **should** be manually opened before (and closed after).
+
+### Writing Data
 
 To simply send data to a device, call `.Write(...)` method:
 
@@ -87,9 +100,9 @@ To simply send data to a device, call `.Write(...)` method:
   device := HidDevice(DeviceInfo)
 	
   ; Max Length of an output buffer is device.OutputBufferSize (32, if it's QMK device)
-  outputBuffer := [1, 2, 3, 4, 5]
+  output := [1, 2, 3, 4, 5]
 	
-  device.Write(outputBuffer, &err)
+  device.Write(output, &err)
   if err {
     MsgBox("Error at writing: " err.Message)
     return
@@ -97,21 +110,58 @@ To simply send data to a device, call `.Write(...)` method:
 }
 ```
 
-> [!NOTE]
-> In this simple case, there is no need to manually open or close the device.
-> It's automatically opened before writing, and closed after.<br>
-> However, when writing multiple output data in a row, it's better to once manually open it, send the data, and close.
-
-
 ### Reading Data
 
 To read data from a device, use `.Read(...)` method:
 
-> [!IMPORTANT]
-> When writing data and reading the response, the device **must** be manually opened and closed after.
-
 ```ahk
 ^i:: {
+  device := HidDevice(DeviceInfo)
+
+  ; By default, .Open() opens the device with both reading and writing access rights.
+  ; If you need it for only reading or only writing, pass one of the following flags as an optional parameter:
+  ; - HID_READ
+  ; - HID_WRITE
+	
+  ; Since, in this case, we're going to only read from the device, it's opened with the reading rights.
+  device.Open(&err, HID_READ)
+  if err {
+    MsgBox("Error at opening: " err.Message)
+    return
+  }
+	
+  try {
+    timeout := 1000 ; ms
+
+    loop {
+      ; The Length of an input buffer is always device.InputBufferSize (32, if it's QMK device)
+      input := device.Read(timeout, &err)
+      if err {
+        if err is TimeoutError { ; true if it's timed out
+          continue
+        }
+        
+        MsgBox("Error at reading: " err.Message)
+        return
+      }
+
+      ; Do something with the data
+  
+    }
+  } finally {
+    device.Close()
+  }
+}
+```
+
+### Measuring Write-Read time in milliseconds
+
+```ahk
+DllCall("QueryPerformanceFrequency", "Int64*", &Frequency:=0)
+
+^i:: {
+  DllCall("QueryPerformanceCounter", "Int64*", &startingTime:=0)
+	
   device := HidDevice(DeviceInfo)
 	
   device.Open(&err)
@@ -120,40 +170,32 @@ To read data from a device, use `.Read(...)` method:
     return
   }
 	
-  response := unset
-	
   try {
-    device.Write([1, 2, 3, 4, 5], &err)
+    device.Write([255], &err)
     if err {
       MsgBox("Error at writing: " err.Message)
       return
     }
-
-    timeout := 1000 ; ms
-
-    ; The return type is an Array and its Length is always device.InputBufferSize (32, if it's QMK device)
-    response := device.Read(timeout, &err)
+		
+    _ := device.Read(1000, &err)
     if err {
-      if err is TimeoutError { ; true if it's timed out
-        MsgBox("Timed out")
-        return
-      }
-
       MsgBox("Error at reading: " err.Message)
       return
     }
+		
   } finally {
     device.Close()
   }
 	
-  msg := ""
-  for i, v in response {
-    msg .= Format("data[{1}] == {2}`n", i-1, v)
-  }
+  DllCall("QueryPerformanceCounter", "Int64*", &endingTime:=0)
 	
-  MsgBox(msg)
+  elapsedMilliseconds := Round((endingTime - startingTime) * 1000 / Frequency)
+  MsgBox(elapsedMilliseconds " ms")
 }
+
 ```
+
+
 > [!NOTE]
 > Usage of `MsgBox()` is for demonstration purposes only.<br>
 > Personally, I do not recommend to use it for simply displaying errors, while there is a handle (or anythig that should be closed/released/freed) waiting for it to close, since `MsgBox()` blocks the executing thread until you close the dialog window.

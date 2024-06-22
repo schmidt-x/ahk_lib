@@ -11,6 +11,11 @@ class OperaGX {
 	
 	static IsActive => WinActive(this._winProcessName)
 	
+	static IsYoutube(title) {
+		len := StrLen(title)
+		return len >= 15 && SubStr(title, len-14, 15) == "YouTube - Opera"
+	}
+	
 	
 	static Run() {
 		if hwnd := WinExist(this._winProcessName) {
@@ -110,7 +115,7 @@ class OperaGX {
 		; default: none
 		; extension: Enhancer for YouTube™
 		
-		SendInput("!l")
+		SendInput("{LAlt Down}l{LCtrl Down}{LAlt Up}{LCtrl Up}")
 	}
 	
 	static IncreasePlaybackSpeed() {

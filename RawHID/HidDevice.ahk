@@ -7,6 +7,9 @@
 #Include <RawHID\Helpers>
 
 
+HID_READ  := GENERIC_READ
+HID_WRITE := GENERIC_WRITE
+
 class HidDevice {
 	_inputReportByteLength  := unset
 	_outputReportByteLength := unset
@@ -35,14 +38,21 @@ class HidDevice {
 	
 	
 	; TODO: add docs
-	Open(&err) {
+	Open(&err, desiredAccess := HID_READ | HID_WRITE) {
+		invalidFlags := ~(HID_READ | HID_WRITE)
+		
+		if desiredAccess & invalidFlags {
+			err := ValueError("At least one invalid flag is set for parameter 'desiredAccess'.")
+			return
+		}
+		
 		err := ""
 		
 		if this._isOpen {
 			return
 		}
 		
-		this._Open(GENERIC_READ | GENERIC_WRITE, &err)
+		this._Open(desiredAccess, &err)
 	}
 	
 	; TODO: add docs
