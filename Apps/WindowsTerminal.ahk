@@ -13,7 +13,7 @@ class WindowsTerminal {
 	
 	static IsActive => WinActive(this._winProcessName)
 	
-	static Open(&args, hwnd, &err) {
+	static Open(&args, hwnd, &output) {
 		if StrIsEmptyOrWhiteSpace(args) {
 			Run(this._fullProcessName)
 			return
@@ -21,20 +21,20 @@ class WindowsTerminal {
 		
 		if args == "." {
 			if !Paths.TryGet(&path, hwnd) {
-				err := "Path not found."
+				output := "Path not found."
 				return
 			}
 			
-			Run(Format('{1} -d "{2}"', this._fullProcessName, path))
+			Run(Format('{} -d "{}"', this._fullProcessName, path))
 			return
 		}
 		
 		if !Paths.TryGetFolderPath(args, &path) {
-			err := "Folder not found."
+			output := Format("Folder «{}» not found.", args)
 			return
 		}
 		
-		Run(Format('{1} -d "{2}"', this._fullProcessName, path))
+		Run(Format('{} -d "{}"', this._fullProcessName, path))
 	}
 	
 	

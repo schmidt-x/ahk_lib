@@ -14,14 +14,14 @@ class Explorer {
 		CommandRunner.AddCommands("exp", this.Open.Bind(this))
 	}
 	
-	static Open(&folder, _, &err) {
+	static Open(&folder, _, &output) {
 		if StrIsEmptyOrWhiteSpace(folder) {
 			SendInput("#e")
 			return
 		}
 	
 		if !Paths.TryGetFolderPath(folder, &path) {
-			err := Format("Folder «{1}» not found", folder)
+			output := Format("Folder «{1}» not found", folder)
 			return
 		}
 		

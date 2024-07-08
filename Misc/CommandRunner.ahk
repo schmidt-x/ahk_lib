@@ -26,10 +26,10 @@ class CommandRunner {
 	/**
 	 * @type {Gui.Control}
 	 */
-	static _errorEdit       := unset
-	static _errorEditHwnd   := unset
-	static _errorEditHeight := 350
-	static _errorEditPaddY  := 15
+	static _outputEdit       := unset
+	static _outputEditHwnd   := unset
+	static _outputEditHeight := 350
+	static _outputEditPaddY  := 15
 	
 	static _escaped := false
 	static _prevWinHwnd := 0
@@ -65,10 +65,10 @@ class CommandRunner {
 			x + Disposition.GetShift(xDisposition, width),
 			y + Disposition.GetShift(yDisposition, height),
 			width,
-			height + this._errorEditHeight + this._errorEditPaddY)
+			height + this._outputEditHeight + this._outputEditPaddY)
 
 		this._consoleEdit.Move(, , width, height)
-		this._errorEdit.Move(, height + this._errorEditPaddY, width)
+		this._outputEdit.Move(, height + this._outputEditPaddY, width)
 		
 		this._xPos := x
 		this._yPos := y
@@ -164,9 +164,10 @@ class CommandRunner {
 	; TODO: add docs
 	static _Execute() {
 		input := this._consoleEdit.Value
+		this._consoleEdit.Value := ""
 		
 		if StrIsEmptyOrWhiteSpace(input) {
-			this._DisplayError("Empty input")
+			this._DisplayOutput("Empty input.")
 			return
 		}
 		
@@ -174,28 +175,21 @@ class CommandRunner {
 		
 		func := this._commands.Get(command)
 		if not func {
-			this._DisplayErrorF("Command «{1}» not found", command)
+			this._DisplayOutput(Format("Command «{}» not found.", command))
 			return
 		}
 		
 		this._isRunning := true
 		try {
-			func(&args, this._prevWinHwnd, &err:="")
+			func(&args, this._prevWinHwnd, &output:="")
 		} finally {
 			this._isRunning := false
 		}
 		
-		if err {
-			this._DisplayError(err)
-			return
-		}
-		
-		if this._consoleEdit.Visible {
-			this._consoleEdit.Value := ""
-		}
-		
-		if this._errorEdit.Visible {
-			this._HideError()
+		if output {
+			this._DisplayOutput(output)
+		} else if this._outputEdit.Visible {
+			this._HideOutput()
 		}
 		
 		
@@ -213,28 +207,22 @@ class CommandRunner {
 		this._consoleEdit.Value := ""
 		this._consoleEdit.Visible := false
 		
-		if this._errorEdit.Visible {
-			this._errorEdit.Value := ""
-			this._errorEdit.Visible := false
+		if this._outputEdit.Visible {
+			this._outputEdit.Value := ""
+			this._outputEdit.Visible := false
 		}
 	}
 	
-	static _DisplayErrorF(pattern, params*) {
-		this._errorEdit.Visible := true
-		this._errorEdit.Value := Format(pattern, params*)
-		ControlShow(this._errorEditHwnd)
+	static _DisplayOutput(output) {
+		this._outputEdit.Visible := true
+		this._outputEdit.Value := output
+		ControlShow(this._outputEditHwnd)
 	}
 	
-	static _DisplayError(err) {
-		this._errorEdit.Visible := true
-		this._errorEdit.Value := err
-		ControlShow(this._errorEditHwnd)
-	}
-	
-	static _HideError() {
-		this._errorEdit.Value := ""
-		this._errorEdit.Visible := false
-		ControlHide(this._errorEditHwnd)
+	static _HideOutput() {
+		this._outputEdit.Value := ""
+		this._outputEdit.Visible := false
+		ControlHide(this._outputEditHwnd)
 	}
 	
 	static _InitCommands() {
@@ -243,8 +231,8 @@ class CommandRunner {
 		this._commands.Default := ""
 	}
 	
-	static _HandleCommand(&args, _, &err) {
-		err := "TODO"
+	static _HandleCommand(&args, _, &output) {
+		output := "TODO"
 	}
 	
 	static _InitConsole() {
@@ -252,8 +240,7 @@ class CommandRunner {
 		
 		this._console.BackColor := "000000"
 		WinSetTransColor(this._console.BackColor . " 250", this._console.Hwnd)
-		this._console.MarginX := 0
-		this._console.MarginY := 0
+		this._console.MarginX := this._console.MarginY := 0
 		
 		this._console.SetFont("s18 c0xbdbdbd", "JetBrains Mono Regular")
 		
@@ -263,11 +250,11 @@ class CommandRunner {
 		
 		editOpts := Format(
 			"Background171717 -E0x200 xP yP+{1} wP h{2} -VScroll ReadOnly Hidden", 
-			this._height + this._errorEditPaddY,
-			this._errorEditHeight)
+			this._height + this._outputEditPaddY,
+			this._outputEditHeight)
 			
-		this._errorEdit := this._console.AddEdit(editOpts)
-		this._errorEditHwnd := ControlGetHwnd(this._errorEdit)
+		this._outputEdit := this._console.AddEdit(editOpts)
+		this._outputEditHwnd := ControlGetHwnd(this._outputEdit)
 		
 		this._console.Show("Hide")
 		

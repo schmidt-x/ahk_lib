@@ -16,7 +16,7 @@ class VsCode {
 	
 	
 	; TODO: add docs and support different options (-p path, -f folder, etc)
-	static Open(&args, hwnd, &err) {
+	static Open(&args, hwnd, &output) {
 		if StrIsEmptyOrWhiteSpace(args) {
 			Run(this._fullProcessName)
 			return
@@ -24,20 +24,20 @@ class VsCode {
 		
 		if args == "." {
 			if !Paths.TryGet(&p, hwnd) {
-				err := "Path not found"
+				output := "Path not found."
 				return
 			}
 			
-			Run(Format('"{1}" "{2}"', this._fullProcessName, p))
+			Run(Format('"{}" "{}"', this._fullProcessName, p))
 			return
 		}
 		
 		if !Paths.TryGetFolderPath(args, &p) {
-			err := Format("Folder «{1}» not found", args)
+			output := Format("Folder «{}» not found.", args)
 			return
 		}
 		
-		Run(Format('"{1}" "{2}"', this._fullProcessName, p))
+		Run(Format('"{}" "{}"', this._fullProcessName, p))
 	}
 	
 	static OpenSelected(&err) {

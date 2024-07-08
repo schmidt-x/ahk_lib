@@ -103,7 +103,7 @@ class Mode {
 	
 	; --- private ---
 	
-	static _HandleCommand(&args, hwnd, &err) {
+	static _HandleCommand(&args, hwnd, &output) {
 		; TODO:
 		
 		if args == "-t" {
@@ -111,7 +111,7 @@ class Mode {
 			return
 		}
 		
-		err := "
+		output := "
 			(
 			Wrong option.`n
 			Supported list of options:
@@ -121,15 +121,14 @@ class Mode {
 	
 	static _InitDisplay() {
 		this._display.Opt("AlwaysOnTop -Caption ToolWindow")
-		this._display.MarginX := 0
-		this._display.MarginY := 0
+		this._display.MarginX := this._display.MarginY := 0
 		
 		this._display.BackColor := "000000" ; any color (since we're gonna make it transparent)
 		WinSetTransColor(this._display.BackColor . " 240", this._display.Hwnd)
 		this._display.SetFont("s16 c0x5c5c5c", "JetBrains Mono Regular")
 		
 		textOpts := Format("Background171717 w{1} h{2} Center", this._width, this._height)
-		this._displayText  := this._display.AddText(textOpts)
+		this._displayText := this._display.AddText(textOpts)
 		
 		this._display.Show("Hide")
 		

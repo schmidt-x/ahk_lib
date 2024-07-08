@@ -17,7 +17,7 @@ class Rider {
 		CommandRunner.AddCommands("rider", this.Open.Bind(this))
 	}
 	
-	static Open(&projName, _, &err) {
+	static Open(&projName, _, &output) {
 		if StrIsEmptyOrWhiteSpace(projName) {
 			; It doesn't seem to have a way to open the Welcome page,
 			; if at least one solution is already opened
@@ -30,11 +30,11 @@ class Rider {
 		proj := this._projects.Get(projName)
 		
 		if not proj {
-			err := Format("Project «{1}» is not found", projName)
+			output := Format("Project «{}» is not found.", projName)
 			return
 		} 
 		
-		Run(Format('"{1}" "{2}"', this._fullProcessName, proj))
+		Run(Format('"{}" "{}"', this._fullProcessName, proj))
 	}
 	
 	
