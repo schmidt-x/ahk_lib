@@ -1,3 +1,3 @@
 RESERVED := 0
 HID_AHK  := 1
-HID_PING := 255
+HID_PING := 0xFF

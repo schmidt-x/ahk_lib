@@ -84,6 +84,17 @@ DragWindow() {
 	SetWinDelay(prevWinDelay)
 }
 
+NewGuidStr(upperCase := false) {
+	guidBuff := Buffer(16)
+	DllCall("ole32\CoCreateGuid", "Ptr", guidBuff)
+	
+	cchMax := 39 ; {7E88ABC9-EECF-4C2D-A783-44D1A0F83B0F}\n == 39
+	lpsz := Buffer(cchMax*2)
+	DllCall("ole32\StringFromGUID2", "Ptr", guidBuff, "Ptr", lpsz, "Int", cchMax)
+	
+	guidStr := StrGet(lpsz.Ptr+2, 36) ; Get rid of curly braces
+	return upperCase ? guidStr : StrLower(guidStr)
+}
 
 ; --- Blind Input ---
 	

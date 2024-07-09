@@ -11,11 +11,6 @@ class OperaGX {
 	
 	static IsActive => WinActive(this._winProcessName)
 	
-	static IsYoutube(title) {
-		len := StrLen(title)
-		return len >= 15 && SubStr(title, len-14, 15) == "YouTube - Opera"
-	}
-	
 	
 	static Run() {
 		if hwnd := WinExist(this._winProcessName) {
@@ -23,6 +18,11 @@ class OperaGX {
 		} else {
 			Run(this._fullProcessName)
 		}
+	}
+	
+	static IsYoutube(title) {
+		len := StrLen(title)
+		return len >= 15 && SubStr(title, len-14, 15) == "YouTube - Opera"
 	}
 	
 	

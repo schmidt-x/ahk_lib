@@ -124,7 +124,7 @@ class Mode {
 		this._display.MarginX := this._display.MarginY := 0
 		
 		this._display.BackColor := "000000" ; any color (since we're gonna make it transparent)
-		WinSetTransColor(this._display.BackColor . " 240", this._display.Hwnd)
+		WinSetTransColor(this._display.BackColor " 240", this._display.Hwnd)
 		this._display.SetFont("s16 c0x5c5c5c", "JetBrains Mono Regular")
 		
 		textOpts := Format("Background171717 w{1} h{2} Center", this._width, this._height)
