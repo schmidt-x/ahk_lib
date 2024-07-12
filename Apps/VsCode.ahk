@@ -155,4 +155,18 @@ class VsCode {
 	static ScrollTerminalUpByPage() => SendInput("+{PgUp}")
 	
 	static ScrollTerminalDownByPage() => SendInput("+{PgDn}")
+	
+	; --- Debugger ---
+	
+	static StopDebugger() => SendInput("+{F5}")
+	
+	static RestartDebugger() => SendInput("+^{F5}")
+	
+	static StepOver() => SendInput("{F10}")
+	
+	static StepInto() => SendInput("{F11}")
+	
+	static StepOut() => SendInput("+{F11}")
+	
+	; --- ---
 }
