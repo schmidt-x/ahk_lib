@@ -1,5 +1,22 @@
-#Include <WinApi\Dll\Kernel32>
-
+/**
+ * Simple QPC wrapper.
+ * https://learn.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
+ * 
+ * How to use:
+ * 
+ * ```ahk
+ * #Requires AutoHotkey v2.0
+ * 
+ * sw := StopWatch()
+ * 
+ * sw.Start()
+ * ; Activity to be timed
+ * sw.Stop()
+ * 
+ * MsgBox(sw.ElapsedMilliseconds)
+ * MsgBox(sw.ElapsedMicroseconds)
+ * ```
+ */
 class StopWatch {
 	static Frequency := 0
 	
@@ -7,7 +24,7 @@ class StopWatch {
 	_endingTime   := 0
 	
 	static __New() {
-		Kernel32.QueryPerformanceFrequency(&frequency)
+		DllCall("Kernel32\QueryPerformanceFrequency", "Int64*", &frequency:=0)
 		this.Frequency := frequency
 	}
 	
@@ -16,7 +33,7 @@ class StopWatch {
 			this._endingTime := 0
 		}
 		
-		Kernel32.QueryPerformanceCounter(&startingTime)
+		DllCall("Kernel32\QueryPerformanceCounter", "Int64*", &startingTime:=0)
 		this._startingTime := startingTime
 	}
 	
@@ -25,7 +42,7 @@ class StopWatch {
 			return
 		}
 		
-		Kernel32.QueryPerformanceCounter(&endingTime)
+		DllCall("Kernel32\QueryPerformanceCounter", "Int64*", &endingTime:=0)
 		this._endingTime := endingTime
 	}
 	
