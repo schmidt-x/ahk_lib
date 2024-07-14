@@ -44,6 +44,7 @@ class CommandRunner {
 		
 		OnMessage(WM_KEYDOWN, this._OnKEYDOWN.Bind(this))
 		OnMessage(WM_ACTIVATE, this._OnACTIVATE.Bind(this))
+		OnMessage(WM_INPUTLANGCHANGEREQUEST, this._OnINPUTLANGCHANGEREQUEST.Bind(this))
 	}
 	
 	
@@ -149,6 +150,21 @@ class CommandRunner {
 		}
 	}
 	
+	static _OnINPUTLANGCHANGEREQUEST(wParam, lParam, msg, hwnd) {
+		if hwnd != this._console.Hwnd {
+			return
+		}
+		
+		switch wParam {
+			case INPUTLANGCHANGE_BACKWARD:   hkl := HKL_PREV
+			case INPUTLANGCHANGE_FORWARD:    hkl := HKL_NEXT
+			case INPUTLANGCHANGE_SYSCHARSET: hkl := lParam
+			default: return 0
+		}
+		
+		DllCall("ActivateKeyboardLayout", "Ptr", hkl, "UInt", 0)
+	}
+	
 	; TODO: add docs
 	static _Close() {
 		this._ClearAndSetInvisible()
@@ -181,12 +197,12 @@ class CommandRunner {
 		
 		this._isRunning := true
 		try {
-			func(&args, this._prevWinHwnd, &output:="")
+			func(&args, this._prevWinHwnd, &output)
 		} finally {
 			this._isRunning := false
 		}
 		
-		if output {
+		if IsSet(output) {
 			this._DisplayOutput(output)
 		} else if this._outputEdit.Visible {
 			this._HideOutput()
