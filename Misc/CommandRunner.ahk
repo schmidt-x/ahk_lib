@@ -1,4 +1,3 @@
-#Include <WinApi\Constants>
 #Include <Common\Disposition>
 #Include <Common\Helpers>
 
@@ -41,6 +40,10 @@ class CommandRunner {
 	static __New() {
 		this._InitCommands()
 		this._InitConsole()
+		
+		WM_ACTIVATE               := 0x0006
+		WM_INPUTLANGCHANGEREQUEST := 0x0050
+		WM_KEYDOWN                := 0x0100
 		
 		OnMessage(WM_KEYDOWN, this._OnKEYDOWN.Bind(this))
 		OnMessage(WM_ACTIVATE, this._OnACTIVATE.Bind(this))
@@ -109,6 +112,10 @@ class CommandRunner {
 
 	; TODO: probably should redo using dynamic hotkeys
 	static _OnKEYDOWN(wParam, lParam, msg, hwnd) {
+		static VK_BACK   := 0x08
+		static VK_RETURN := 0x0D
+		static VK_ESCAPE := 0x1B
+		
 		if hwnd != this._consoleEditHwnd {
 			return
 		}
@@ -131,6 +138,8 @@ class CommandRunner {
 	}
 	
 	static _OnACTIVATE(wParam, lParam, msg, hwnd) {
+		static WA_INACTIVE := 0
+		
 		if hwnd != this._console.Hwnd || wParam != WA_INACTIVE {
 			return
 		}
@@ -151,6 +160,12 @@ class CommandRunner {
 	}
 	
 	static _OnINPUTLANGCHANGEREQUEST(wParam, lParam, msg, hwnd) {
+		static INPUTLANGCHANGE_SYSCHARSET := 0x01
+		static INPUTLANGCHANGE_FORWARD    := 0x02
+		static INPUTLANGCHANGE_BACKWARD   := 0x04
+		static HKL_PREV := 0
+		static HKL_NEXT := 1
+		
 		if hwnd != this._console.Hwnd {
 			return
 		}
