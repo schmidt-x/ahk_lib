@@ -24,12 +24,14 @@ class I44 {
 		this._deviceInfo := deviceInfo
 	}
 	
+	static NewDevice() => HidDevice(this._deviceInfo)
+	
 	static EnableAhk(&err) {
-		this._NewDevice().Write([HID_AHK, 1], &err)
+		this.NewDevice().Write([HID_AHK, 1], &err)
 	}
 	
 	static DisableAhk(&err) {
-		this._NewDevice().Write([HID_AHK, 0], &err)
+		this.NewDevice().Write([HID_AHK, 0], &err)
 	}
 	
 	/**
@@ -44,7 +46,7 @@ class I44 {
 		sw := StopWatch()
 		sw.Start()
 		
-		device := this._NewDevice()
+		device := this.NewDevice()
 		
 		device.Open(&err)
 		if err {
@@ -78,6 +80,4 @@ class I44 {
 		return true
 	}
 	
-	
-	static _NewDevice() => HidDevice(this._deviceInfo)
 }

@@ -17,7 +17,7 @@ As an example, you can take a look at the communication between the host (my PC)
 
 ### Including Lib
 
-First of all, copy and paste `RawHID` and `WinApi` folders to your [AHK Script Library Folders](https://www.autohotkey.com/docs/v2/Scripts.htm#lib).
+First of all, copy and paste `RawHID` folder to your [AHK Script Library Folders](https://www.autohotkey.com/docs/v2/Scripts.htm#lib).
 
 Then, include `HidDevices` and `HidDevice` files to your main script:
 

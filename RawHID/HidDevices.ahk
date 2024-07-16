@@ -1,12 +1,7 @@
-#Include <WinApi\Errors\OSErrorC>
-#Include <WinApi\Dll\Kernel32>
-#Include <WinApi\Dll\SetupAPI>
-#Include <WinApi\Dll\Hid>
-#Include <WinApi\Constants>
-#Include <WinApi\Structs>
-
-#Include <RawHID\HidDeviceInfo>
-#Include <RawHID\Helpers>
+#Include HidDeviceInfo.ahk
+#Include Helpers.ahk
+#Include Errors.ahk
+#Include WinApi.ahk
 
 class HidDevices {
 	
@@ -24,27 +19,36 @@ class HidDevices {
 			return ""
 		}
 		
-		hidModule := Kernel32.LoadLibraryW(Hid.Name)
-		if not hidModule {
+		hModule := DllCall("kernel32\LoadLibraryW", "Str", "Hid.dll", "Ptr")
+		if not hModule {
 			errorCode := A_LastError
-			err := OSErrorC("Failed to load " Hid.Name " library: " GetErrorMessage(), errorCode)
+			err := OSErrorC("Failed to load Hid.dll library: " _GetErrorMessage(), errorCode)
 			return ""
 		}
 		
 		try {
 			for devicePath in devicePaths {
-				secAttributes := SECURITY_ATTRIBUTES(0, true)
-				shareMode := FILE_SHARE_READ | FILE_SHARE_WRITE
+				secAttributes := _SECURITY_ATTRIBUTES(0, true)
 				
-				hDevice := Kernel32.CreateFileW(devicePath, ACCESS_NONE, shareMode, secAttributes, OPEN_EXISTING, 0, 0)
+				hDevice := DllCall("CreateFileW", 
+					"Ptr",  StrPtr(devicePath),
+					"UInt", ACCESS_NONE,
+					"UInt", FILE_SHARE_READ | FILE_SHARE_WRITE,
+					"Ptr",  secAttributes,
+					"UInt", OPEN_EXISTING,
+					"UInt", 0,
+					"Ptr",  0,
+					"Ptr")
+				
 				if hDevice == INVALID_HANDLE_VALUE {
 					; TODO: to log
 					continue
 				}
 				
 				try {
-					hidAttributes := HIDD_ATTRIBUTES()
-					succeeded := Hid.HidD_GetAttributes(hDevice, hidAttributes)
+					hidAttributes := _HIDD_ATTRIBUTES()
+					
+					succeeded := DllCall("hid\HidD_GetAttributes", "Ptr", hDevice, "Ptr", hidAttributes)
 					if not succeeded {
 						; TODO: to log
 						continue
@@ -54,16 +58,16 @@ class HidDevices {
 						continue
 					}
 					
-					succeeded := Hid.HidD_GetPreparsedData(hDevice, &preparsedData)
+					succeeded := DllCall("hid\HidD_GetPreparsedData", "Ptr", hDevice, "Ptr*", &preparsedData:=0)
 					if not succeeded {
 						; TODO: to log
 						continue
 					}
 					
 					try {
-						caps := HIDP_CAPS()
+						caps := _HIDP_CAPS()
 						
-						succeeded := Hid.HidP_GetCaps(preparsedData, caps)
+						succeeded := DllCall("hid\HidP_GetCaps", "Ptr", preparsedData, "Ptr", caps)
 						if not succeeded {
 							; TODO: to log
 							continue
@@ -83,12 +87,12 @@ class HidDevices {
 							usagePage)
 						
 					} finally {
-						if not Hid.HidD_FreePreparsedData(preparsedData) {
+						if not DllCall("hid\HidD_FreePreparsedData", "Ptr", preparsedData) {
 							; TODO: to log
 						}
 					}
 				} finally {
-					if not Kernel32.CloseHandle(hDevice) {
+					if not DllCall("kernel32\CloseHandle", "Ptr", hDevice) {
 						; TODO: to log
 					}
 				}
@@ -98,7 +102,7 @@ class HidDevices {
 			return ""
 			
 		} finally {
-			if not Kernel32.FreeLibrary(hidModule) {
+			if not DllCall("kernel32\FreeLibrary", "Ptr", hModule) {
 				; TODO: to log
 			}
 		}
@@ -107,64 +111,79 @@ class HidDevices {
 	; TODO: add docs
 	static _ListDevicePaths(&err) {
 		hidGuid := Buffer(16)
-		Hid.HidD_GetHidGuid(hidGuid)
+		DllCall("hid\HidD_GetHidGuid", "Ptr", hidGuid)
 		
-		hModule := Kernel32.LoadLibraryW(SetupApi.Name)
+		hModule := DllCall("kernel32\LoadLibraryW", "Str", "SetupApi.dll", "Ptr")
 		if not hModule {
 			errorCode := A_LastError
-			err := OSErrorC("Failed to load " SetupApi.Name " library: " GetErrorMessage(), errorCode)
+			err := OSErrorC("Failed to load SetupApi.dll library: " _GetErrorMessage(), errorCode)
 			return ""
 		}
 		
 		try {
-			hDevInfoSet := SetupApi.SetupDiGetClassDevsW(hidGuid, 0, 0, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT)
+			hDevInfoSet := DllCall("setupapi\SetupDiGetClassDevsW", 
+				"Ptr",  hidGuid,
+				"Ptr",  0,
+				"Ptr",  0,
+				"UInt", DIGCF_DEVICEINTERFACE | DIGCF_PRESENT, "Ptr")
+				
 			if hDevInfoSet == INVALID_HANDLE_VALUE {
 				errorCode := A_LastError
-				err := OSErrorC("Failed to get Device Information Set: " GetErrorMessage(), errorCode)
+				err := OSErrorC("Failed to get Device Information Set: " _GetErrorMessage(), errorCode)
 				return ""
 			}
 			
 			try {
-				devInterfaceData := SP_DEVICE_INTERFACE_DATA()
+				devInterfaceData := _SP_DEVICE_INTERFACE_DATA()
 				devicePathList := []
 				
 				mIndex := 0
-				while SetupApi.SetupDiEnumDeviceInterfaces(hDevInfoSet, 0, hidGuid, mIndex, devInterfaceData) {
-					
-					_ := SetupApi.SetupDiGetDeviceInterfaceDetailW(hDevInfoSet, devInterfaceData, 0, 0, &requiredSize, 0)
+				while DllCall("setupapi\SetupDiEnumDeviceInterfaces",
+					"Ptr",  hDevInfoSet,
+					"Ptr",  0,
+					"Ptr",  hidGuid,
+					"UInt", mIndex++,
+					"Ptr",  devInterfaceData)
+				{
+					_ := DllCall("setupapi\SetupDiGetDeviceInterfaceDetailW",
+						"Ptr",   hDevInfoSet,
+						"Ptr",   devInterfaceData,
+						"Ptr",   0,
+						"UInt",  0,
+						"UInt*", &requiredSize:=0,
+						"Ptr",   0)
 					
 					if A_LastError != ERROR_INSUFFICIENT_BUFFER {
 						; TODO: to log
 						continue
 					}
 					
-					devInterfaceDetailData := SP_DEVICE_INTERFACE_DETAIL_DATA(requiredSize)
+					devInterfaceDetailData := _SP_DEVICE_INTERFACE_DETAIL_DATA(requiredSize)
 					
-					succeeded := SetupApi.SetupDiGetDeviceInterfaceDetailW(
-						hDevInfoSet,
-						devInterfaceData,
-						devInterfaceDetailData,
-						requiredSize,
-						&requiredSize, 0)
+					succeeded := DllCall("setupapi\SetupDiGetDeviceInterfaceDetailW",
+						"Ptr",  hDevInfoSet,
+						"Ptr",  devInterfaceData,
+						"Ptr",  devInterfaceDetailData,
+						"UInt", requiredSize,
+						"Ptr",  0,
+						"Ptr",  0)
 					
 					if not succeeded {
 						; TODO: to log
 					} else {
 						devicePathList.Push(devInterfaceDetailData.GetDevicePath())
 					}
-					
-					mIndex++
 				}
 				
 				return devicePathList
 				
 			} finally {
-				if not SetupApi.SetupDiDestroyDeviceInfoList(hDevInfoSet) {
+				if not DllCall("setupapi\SetupDiDestroyDeviceInfoList", "Ptr", hDevInfoSet) {
 					; TODO: to log
 				}
 			}
 		} finally {
-			if not Kernel32.FreeLibrary(hModule) {
+			if not DllCall("kernel32\FreeLibrary", "Ptr", hModule) {
 				; TODO: to log
 			}
 		}

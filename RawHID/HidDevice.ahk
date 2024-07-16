@@ -1,11 +1,7 @@
-#Include <WinApi\Errors\OSErrorC>
-#Include <WinApi\Dll\Kernel32>
-#Include <WinApi\Constants>
-#Include <WinApi\Structs>
-
-#Include <RawHID\HidDeviceInfo>
-#Include <RawHID\Helpers>
-
+#Include HidDeviceInfo.ahk
+#Include Helpers.ahk
+#Include Errors.ahk
+#Include WinApi.ahk
 
 HID_READ  := GENERIC_READ
 HID_WRITE := GENERIC_WRITE
@@ -29,7 +25,7 @@ class HidDevice {
 	
 	__Delete() {
 		if this._isOpen && this._hDevice {
-			Kernel32.CloseHandle(this._hDevice)
+			DllCall("kernel32\CloseHandle", "Ptr", this._hDevice)
 		}
 	}
 	
@@ -85,44 +81,49 @@ class HidDevice {
 		}
 		
 		try {
-			hWriteEvent := Kernel32.CreateEventW(0, true, false, 0)
+			hWriteEvent := DllCall("kernel32\CreateEventW", "Ptr", 0, "Int", true, "Int", false, "Ptr", 0, "Ptr")
 			if not hWriteEvent {
 				errorCode := A_LastError
-				err := OSErrorC("Failed to create WriteEvent: " GetErrorMessage(), errorCode)
+				err := OSErrorC("Failed to create WriteEvent: " _GetErrorMessage(), errorCode)
 				return
 			}
 			
 			try {
-				writeOl := OVERLAPPED(hWriteEvent)
+				writeOl := _OVERLAPPED(hWriteEvent)
 				output := this._ToBuffer(arr)
 				
-				finished := Kernel32.WriteFile(this._hDevice, output, output.Size, &_, writeOl)
-				if finished {
-					; finished synchronously
+				finished := DllCall("kernel32\WriteFile", 
+					"Ptr",  this._hDevice,
+					"Ptr",  output,
+					"UInt", output.Size,
+					"Ptr",  0,
+					"Ptr",  writeOl)
+				
+				if finished { ; finished synchronously
 					return
 				}
 				
 				if A_LastError != ERROR_IO_PENDING {
 					errorCode := A_LastError
-					err := OSErrorC("Failed to write: " GetErrorMessage(), errorCode)
+					err := OSErrorC("Failed to write: " _GetErrorMessage(), errorCode)
 					return
 				}
 				
-				waitResult := Kernel32.WaitForSingleObject(hWriteEvent, 1000)
+				waitResult := DllCall("kernel32\WaitForSingleObject", "Ptr", hWriteEvent, "UInt", 200)
 				
 				switch waitResult {
 					case WAIT_OBJECT_0:
 						return
 					
 					case WAIT_TIMEOUT:
-						if not Kernel32.CancelIoEx(this._hDevice, writeOl) {
+						if not DllCall("kernel32\CancelIoEx", "Ptr", this._hDevice, "Ptr", writeOl) {
 							; TODO: to log
 						}
 						err := TimeoutError("Writing timed out.")
 						
 					case WAIT_FAILED:
 						errorCode := A_LastError
-						err := OSErrorC("Failed to wait for writing: " GetErrorMessage(), errorCode)
+						err := OSErrorC("Failed to wait for writing: " _GetErrorMessage(), errorCode)
 					
 					default:
 						throw Error("Shouldn't reach here.")
@@ -131,7 +132,7 @@ class HidDevice {
 				return
 				
 			} finally {
-				if not Kernel32.CloseHandle(hWriteEvent) {
+				if not DllCall("kernel32\CloseHandle", "Ptr", hWriteEvent) {
 					; TODO: to log
 				}
 			}
@@ -162,44 +163,49 @@ class HidDevice {
 		}
 		
 		try {
-			hReadEvent := Kernel32.CreateEventW(0, true, false, 0)
+			hReadEvent := DllCall("CreateEventW", "Ptr", 0, "Int", true, "Int", false, "Ptr", 0, "Ptr")
 			if not hReadEvent {
 				errorCode := A_LastError
-				err := OSErrorC("Failed to create ReadEvent: " GetErrorMessage(), errorCode)
+				err := OSErrorC("Failed to create ReadEvent: " _GetErrorMessage(), errorCode)
 				return ""
 			}
 			
 			try {
-				readOl := OVERLAPPED(hReadEvent)
+				readOl := _OVERLAPPED(hReadEvent)
 				input := Buffer(this._inputReportByteLength, 0)
 				
-				finished := Kernel32.ReadFile(this._hDevice, input, input.Size, &_, readOl)
-				if finished {
-					; finished synchronously
+				finished := DllCall("kernel32\ReadFile", 
+					"Ptr",  this._hDevice,
+					"Ptr",  input,
+					"UInt", input.Size,
+					"Ptr",  0,
+					"Ptr",  readOl)
+				
+				if finished { ; finished synchronously
 					return this._ToArray(input)
 				}
 				
 				if A_LastError != ERROR_IO_PENDING {
 					errorCode := A_LastError
-					err := OSErrorC("Failed to read: " GetErrorMessage(), errorCode)
+					err := OSErrorC("Failed to read: " _GetErrorMessage(), errorCode)
 					return ""
 				}
 				
-				waitResult := Kernel32.WaitForSingleObject(hReadEvent, timeout)
+				waitResult := DllCall("kernel32\WaitForSingleObject", "Ptr", hReadEvent, "UInt", timeout)
 					
 				switch waitResult {
 					case WAIT_OBJECT_0:
 						return this._ToArray(input)
 					
 					case WAIT_TIMEOUT:
-						if not Kernel32.CancelIoEx(this._hDevice, readOl) {
+						if not DllCall("kernel32\CancelIoEx", "Ptr", this._hDevice, "Ptr", readOl) {
 							; TODO: to log
 						}
 						err := TimeoutError("Reading timed out.")
 					
 					case WAIT_FAILED:
 						errorCode := A_LastError
-						err := OSErrorC("Failed to wait for reading: " GetErrorMessage(), errorCode)
+						err := OSErrorC("Failed to wait for reading: " _GetErrorMessage(), errorCode)
 					
 					default:
 						throw Error("Shouldn't reach here.")
@@ -208,7 +214,7 @@ class HidDevice {
 				return ""
 				
 			} finally {
-				if not Kernel32.CloseHandle(hReadEvent) {
+				if not DllCall("kernel32\CloseHandle", "Ptr", hReadEvent) {
 					; TODO: to log
 				}
 			}
@@ -225,7 +231,7 @@ class HidDevice {
 			return
 		}
 		
-		if not Kernel32.CloseHandle(this._hDevice) {
+		if not DllCall("kernel32\CloseHandle", "Ptr", this._hDevice) {
 			; TODO: to log
 		}
 		
@@ -235,22 +241,24 @@ class HidDevice {
 	
 	
 	_Open(desiredAccess, &err) {
-		secAttributes := SECURITY_ATTRIBUTES(0, true)
+		secAttributes := _SECURITY_ATTRIBUTES(0, true)
 		
-		hDevice := Kernel32.CreateFileW(
-			this._devicePath,
-			desiredAccess,
-			FILE_SHARE_READ | FILE_SHARE_WRITE,
-			secAttributes,
-			OPEN_EXISTING,
-			FILE_FLAG_OVERLAPPED, 0)
+		hDevice := DllCall("kernel32\CreateFileW",
+			"Ptr",  StrPtr(this._devicePath),
+			"UInt", desiredAccess,
+			"UInt", FILE_SHARE_READ | FILE_SHARE_WRITE,
+			"Ptr",  secAttributes,
+			"UInt", OPEN_EXISTING,
+			"UInt", FILE_FLAG_OVERLAPPED,
+			"Ptr",  0,
+			"Ptr")
 		
 		if hDevice == INVALID_HANDLE_VALUE {
 			errorCode := A_LastError
 			
 			err := OSErrorC("Failed to open a device: " (errorCode == ERROR_FILE_NOT_FOUND 
 				? "Device not found."
-				: GetErrorMessage()), errorCode)
+				: _GetErrorMessage()), errorCode)
 				
 			return
 		}
