@@ -78,14 +78,42 @@ To communicate with the device, you need to instantiate a `HidDevice` class, pas
 ```ahk
 device := HidDevice(DeviceInfo)
 ```
-`HidDevice` class has 4 methods:
-- `Open(err: &Error[, desiredAccess: Integer])`
-- `Write(output: Array, err: &Error)`
-- `Read(timeout: Integer, err: &Error) -> Array`
-- `Close()`
+
+`HidDevice` class has 6 methods:
+
+```ahk
+Open(err: &Error[, desiredAccess: Integer])
+
+Write(arr: Array, err: &Error)
+
+WriteRaw(buff: Buffer, err: &Error)
+
+Read(timeout: Integer, err: &Error) -> Array
+
+ReadRaw(timeout: Integer, err: &Error) -> Buffer
+
+Close()
+```
+
+and 4 properties:
+
+```ahk
+; Length of an array that is returned by .Read method
+InputBufferSize
+
+; Max length of an array that is passed to .Write method
+OutputBufferSize
+
+; Size of a buffer that is returned by .ReadRaw method
+InputRawBufferSize
+
+; Size of a buffer that is passed to .WriteRaw method
+OutputRawBufferSize
+```
 
 > [!NOTE]
-> Both `Write` and `Read` open the device and close it after, if the device was not initially opened.<br>
+> Both `Write` and `Read` methods open the device and close it after, if the device was not initially opened.
+> Same rule is applied to their `Raw` versions as well.<br>
 > However, for repetitive calls, it's recommended to once manually open the device, read/write, and close it after.
 
 > [!IMPORTANT]
@@ -99,10 +127,35 @@ To simply send data to a device, call `.Write(...)` method:
 ^i:: {
   device := HidDevice(DeviceInfo)
 	
-  ; Max Length of an output buffer is device.OutputBufferSize (32, if it's QMK device)
   output := [1, 2, 3, 4, 5]
 	
   device.Write(output, &err)
+  if err {
+    MsgBox("Error at writing: " err.Message)
+    return
+  }
+}
+```
+
+Raw version:
+
+```ahk
+^i:: {
+  device := HidDevice(DeviceInfo)
+
+  output := Buffer(device.OutputRawBufferSize, 0)
+
+  ; Note that the first byte is Report ID and should be ignored.
+  ; Hence, we specify 1 as an Offset to skip it:
+  NumPut(
+    "UChar", 1,
+    "UChar", 2,
+    "UChar", 3,
+    "UChar", 4,
+    "UChar", 5,
+    output, 1)
+
+  device.WriteRaw(output, &err)
   if err {
     MsgBox("Error at writing: " err.Message)
     return
@@ -114,14 +167,15 @@ To simply send data to a device, call `.Write(...)` method:
 
 To read data from a device, use `.Read(...)` method:
 
+> [!NOTE]
+> By default, `.Open(...)` opens the device with both reading and writing access rights.<br>
+> If you need it for only reading or only writing, pass one of the following flags as an optional parameter:
+> - `HID_READ`
+> - `HID_WRITE`
+
 ```ahk
 ^i:: {
   device := HidDevice(DeviceInfo)
-
-  ; By default, .Open() opens the device with both reading and writing access rights.
-  ; If you need it for only reading or only writing, pass one of the following flags as an optional parameter:
-  ; - HID_READ
-  ; - HID_WRITE
 	
   ; Since, in this case, we're going to only read from the device, it's opened with the reading rights.
   device.Open(&err, HID_READ)
@@ -134,7 +188,6 @@ To read data from a device, use `.Read(...)` method:
     timeout := 1000 ; ms
 
     loop {
-      ; The Length of an input buffer is always device.InputBufferSize (32, if it's QMK device)
       input := device.Read(timeout, &err)
       if err {
         if err is TimeoutError { ; true if it's timed out
@@ -146,6 +199,8 @@ To read data from a device, use `.Read(...)` method:
       }
 
       ; Do something with the data
+
+      MsgBox(Format("First 3 bytes: [{}, {}, {}].", input[1], input[2], input[3]))
   
     }
   } finally {
@@ -154,13 +209,38 @@ To read data from a device, use `.Read(...)` method:
 }
 ```
 
+In its Raw version, the body of a loop would look like the following:
+
+```ahk
+; ...
+
+loop {
+  input := device.ReadRaw(timeout, &err)
+  if err {
+    ; ...
+  }
+	
+  ; Do something with the data
+	
+  ; The first byte is Report ID and should be ignored.
+  ; To access the actual data, start from the second byte, specifying an Offset as 1 + i'th index:
+  byte1 := NumGet(input, 1, "UChar")
+  byte2 := NumGet(input, 2, "UChar")
+  byte3 := NumGet(input, 3, "UChar")
+  
+  MsgBox(Format("First 3 bytes: [{}, {}, {}]", byte1, byte2, byte3))
+}
+
+; ...
+```
+
 ### Measuring Write-Read time in milliseconds
 
 ```ahk
-DllCall("QueryPerformanceFrequency", "Int64*", &Frequency:=0)
+DllCall("kernel32\QueryPerformanceFrequency", "Int64*", &Frequency:=0)
 
 ^i:: {
-  DllCall("QueryPerformanceCounter", "Int64*", &startingTime:=0)
+  DllCall("kernel32\QueryPerformanceCounter", "Int64*", &startingTime:=0)
 	
   device := HidDevice(DeviceInfo)
 	
@@ -171,7 +251,7 @@ DllCall("QueryPerformanceFrequency", "Int64*", &Frequency:=0)
   }
 	
   try {
-    device.Write([255], &err)
+    device.Write([], &err)
     if err {
       MsgBox("Error at writing: " err.Message)
       return
@@ -187,7 +267,7 @@ DllCall("QueryPerformanceFrequency", "Int64*", &Frequency:=0)
     device.Close()
   }
 	
-  DllCall("QueryPerformanceCounter", "Int64*", &endingTime:=0)
+  DllCall("kernel32\QueryPerformanceCounter", "Int64*", &endingTime:=0)
 	
   elapsedMilliseconds := Round((endingTime - startingTime) * 1000 / Frequency)
   MsgBox(elapsedMilliseconds " ms")

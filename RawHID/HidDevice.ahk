@@ -32,6 +32,9 @@ class HidDevice {
 	InputBufferSize  => this._inputReportByteLength-1
 	OutputBufferSize => this._outputReportByteLength-1
 	
+	InputRawBufferSize  => this._inputReportByteLength
+	OutputRawBufferSize => this._outputReportByteLength
+	
 	
 	; TODO: add docs
 	Open(&err, desiredAccess := HID_READ | HID_WRITE) {
@@ -53,23 +56,70 @@ class HidDevice {
 	
 	; TODO: add docs
 	Write(arr, &err) {
-		err := ""
-		
 		if !(arr is Array) {
 			err := TypeError("Invalid parameter type for 'arr'. Expected: Array, got: " Type(arr) ".")
 			return
 		}
 		
-		if arr.Length == 0 {
-			err := ValueError("Empty array.")
-			return
-		}
-		
-		if arr.Length >= this._outputReportByteLength {
+		if arr.Length > this.OutputBufferSize {
 			err := ValueError(Format("Invalid array size. Max Length is: {1}, got: {2}.", this.OutputBufferSize, arr.Length))
 			return
 		}
 		
+		this._Write(this._ToBuffer(arr), &err:="")
+	}
+	
+	; TODO: add docs
+	WriteRaw(buff, &err) {
+		if !(buff is Buffer) {
+			err := TypeError("Invalid parameter type for 'buff'. Expected: Buffer, got: " Type(buff) ".")
+			return
+		}
+		
+		if buff.Size != this._outputReportByteLength {
+			err := ValueError(Format("Invalid buffer size. Expected: {}, got: {}.", this._outputReportByteLength, buff.Size))
+			return
+		}
+		
+		return this._Write(buff, &err:="")
+	}
+	
+	; TODO: add docs
+	Read(timeout, &err) {
+		input := this.ReadRaw(timeout, &err)
+		if err {
+			return ""
+		}
+		
+		return this._ToArray(input)
+	}
+	
+	; TODO: add docs
+	ReadRaw(timeout, &err) {
+		if timeout < 0 {
+			err := ValueError("Parameter 'timeout' must not have a negative value.")
+			return ""
+		}
+		
+		return this._Read(timeout, &err:="")
+	}
+	
+	; TODO: add docs
+	Close() {
+		if !this._isOpen {
+			return
+		}
+		
+		if not DllCall("kernel32\CloseHandle", "Ptr", this._hDevice) {
+			; TODO: to log
+		}
+		
+		this._isOpen := false
+		this._hDevice := -1
+	}
+	
+	
+	_Write(output, &err) {
 		if !this._isOpen {
 			this._Open(GENERIC_WRITE, &err)
 			if err {
@@ -90,7 +140,6 @@ class HidDevice {
 			
 			try {
 				writeOl := _OVERLAPPED(hWriteEvent)
-				output := this._ToBuffer(arr)
 				
 				finished := DllCall("kernel32\WriteFile", 
 					"Ptr",  this._hDevice,
@@ -143,15 +192,7 @@ class HidDevice {
 		}
 	}
 	
-	; TODO: add docs
-	Read(timeout, &err) {
-		err := ""
-		
-		if timeout < 0 {
-			err := ValueError("Parameter 'timeout' must not have a negative value.")
-			return ""
-		}
-		
+	_Read(timeout, &err) {
 		if !this._isOpen {
 			this._Open(GENERIC_READ, &err)
 			if err {
@@ -182,7 +223,7 @@ class HidDevice {
 					"Ptr",  readOl)
 				
 				if finished { ; finished synchronously
-					return this._ToArray(input)
+					return input
 				}
 				
 				if A_LastError != ERROR_IO_PENDING {
@@ -195,7 +236,7 @@ class HidDevice {
 					
 				switch waitResult {
 					case WAIT_OBJECT_0:
-						return this._ToArray(input)
+						return input
 					
 					case WAIT_TIMEOUT:
 						if not DllCall("kernel32\CancelIoEx", "Ptr", this._hDevice, "Ptr", readOl) {
@@ -224,21 +265,6 @@ class HidDevice {
 			}
 		}
 	}
-	
-	; TODO: add docs
-	Close() {
-		if !this._isOpen {
-			return
-		}
-		
-		if not DllCall("kernel32\CloseHandle", "Ptr", this._hDevice) {
-			; TODO: to log
-		}
-		
-		this._isOpen := false
-		this._hDevice := -1
-	}
-	
 	
 	_Open(desiredAccess, &err) {
 		secAttributes := _SECURITY_ATTRIBUTES(0, true)

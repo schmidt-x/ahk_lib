@@ -225,14 +225,14 @@ SetFilterKeys(onOff?, waitMSec?, delayMSec?, repeatMSec?, bounceMSec?) {
  * Gets the values of the FilterKeys accessibility feature.
  * @returns {Object} 
  * @member `.Flags`: `Integer` A set of bit flags that specify properties of the FilterKeys feature.
- * @member `.WaitMSec`: `Integer` The length of time, in milliseconds, that the user must hold down a key
- * before it is accepted by the computer.
- * @member `.DelayMSec`: `Integer` The length of time, in milliseconds, that the user must hold down a key
- * before it begins to repeat.
- * @member `.RepeatMSec`: `Integer` The length of time, in milliseconds, that the user must hold down a key
- * before it begins to repeat.
- * @member `.BounceMSec`: `Integer` The length of time, in milliseconds, that must elapse after releasing 
- * a key before the computer will accept a subsequent press of the same key.
+ * @member `.WaitMSec`: `Integer` The length of time, in milliseconds, that the user must hold down 
+ * a key before it is accepted by the computer.
+ * @member `.DelayMSec`: `Integer` The length of time, in milliseconds, that the user must hold down 
+ * a key before it begins to repeat.
+ * @member `.RepeatMSec`: `Integer` The length of time, in milliseconds, between each repetition
+ * of the keystroke.
+ * @member `.BounceMSec`: `Integer` The length of time, in milliseconds, that must elapse after 
+ * releasing a key before the computer will accept a subsequent press of the same key.
  */
 GetFilterKeys() {
 	cbSize := 24
