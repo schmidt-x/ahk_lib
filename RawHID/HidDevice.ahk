@@ -81,7 +81,7 @@ class HidDevice {
 			return
 		}
 		
-		return this._Write(buff, &err:="")
+		this._Write(buff, &err:="")
 	}
 	
 	; TODO: add docs

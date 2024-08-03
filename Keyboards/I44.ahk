@@ -66,7 +66,7 @@ class I44 {
 				return false
 			}
 			
-			_ := device.Read(1000, &err)
+			_ := device.Read(200, &err)
 			if err {
 				return false
 			}

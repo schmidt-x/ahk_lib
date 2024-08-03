@@ -143,6 +143,8 @@ class Rider {
 	
 	static Commit() => SendInput("!0")
 	
+	static Git() => SendInput("+^g")
+	
 	static Structure() => SendInput("!7")
 	
 	static ILViewer() => SendInput("!4")
@@ -174,6 +176,8 @@ class Rider {
 	static ScrollTerminalUp() => SendInput("^{Up}")
 	
 	static ScrollTerminalDown() => SendInput("^{Down}")
+	
+	static Execute() => SendInput("!^1") ; Database\Execution\Execution\Execute
 	
 	; --- Debugger ---
 	
