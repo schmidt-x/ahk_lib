@@ -192,4 +192,18 @@ class Rider {
 	static StepInto() => SendInput("{F11}") ; Main Menu/Run/Debugger Actions/Step Into
 	
 	; --- ---
+	
+	static SelectTab1() => SendInput("!^2")
+	
+	static SelectTab2() => SendInput("!^3")
+	
+	static SelectTab3() => SendInput("!^4")
+	
+	static SelectTab4() => SendInput("!^5")
+	
+	static SelectTab5() => SendInput("!^6")
+	
+	static SelectTab6() => SendInput("!^7")
+	
+	static SelectLastTab() => SendInput("!^0")
 }
