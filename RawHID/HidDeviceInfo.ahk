@@ -1,6 +1,9 @@
 class HidDeviceInfo {
 	DevicePath := unset
 	
+	ManufacturerString := unset
+	ProductString := unset
+	
 	InputReportByteLength  := unset
 	OutputReportByteLength := unset
 	
@@ -12,6 +15,8 @@ class HidDeviceInfo {
 	
 	__New(
 		devicePath,
+		manufacturerString,
+		productString,
 		inputReportByteLength,
 		outputReportByteLength,
 		venrodID,
@@ -20,6 +25,8 @@ class HidDeviceInfo {
 		usagePage) 
 	{
 		this.DevicePath := devicePath
+		this.ManufacturerString := manufacturerString
+		this.ProductString := productString
 		this.InputReportByteLength := inputReportByteLength
 		this.OutputReportByteLength := outputReportByteLength
 		this.VendorID := venrodID

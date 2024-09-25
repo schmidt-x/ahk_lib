@@ -64,6 +64,7 @@ if err {
 
 ^i:: { ; Ctrl + i
   MsgBox("DevicePath: " DeviceInfo.DevicePath)
+  MsgBox(Format("DeviceName: {} - {}", DeviceInfo.ManufacturerString, DeviceInfo.ProductString))
 }
 ```
 > [!NOTE]

@@ -157,9 +157,14 @@ SetLang(hkl) {
 	PostMessage(WM_INPUTLANGCHANGEREQUEST, INPUTLANGCHANGE_SYSCHARSET, hkl, , hwnd)
 	
 	if WinGetClass(hwnd) == "#32770" {
-		funcAddress := CallbackCreate(PostToChildWindows, "Fast")
-		DllCall("User32\EnumChildWindows", "Ptr", hwnd, "Ptr", funcAddress, "Ptr", hkl)
-		CallbackFree(funcAddress)
+		lpEnumFunc := CallbackCreate(PostToChildWindows, "Fast")
+		
+		try {
+			DllCall("User32\EnumChildWindows", "Ptr", hwnd, "Ptr", lpEnumFunc, "Ptr", hkl)
+		} finally {
+			CallbackFree(lpEnumFunc)
+		}
+		
 	}
 	
 	PostToChildWindows(hwnd, lParam) {

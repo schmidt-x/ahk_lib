@@ -77,8 +77,36 @@ class HidDevices {
 							continue
 						}
 						
+						stringBuff := Buffer(254, 0)
+						
+						succeeded := DllCall("hid\HidD_GetManufacturerString",
+							"Ptr",  hDevice,
+							"Ptr",  stringBuff,
+							"UInt", stringBuff.Size)
+						
+						if succeeded {
+							manufacturerString := StrGet(stringBuff)
+						} else {
+							manufacturerString := "Unknown"
+							; TODO: to log
+						}
+						
+						succeeded := DllCall("hid\HidD_GetProductString", 
+							"Ptr",  hDevice, 
+							"Ptr",  stringBuff, 
+							"UInt", stringBuff.Size)
+						
+						if succeeded {
+							productString := StrGet(stringBuff)
+						} else {
+							productString := "Unknown"
+							; TODO: to log
+						}
+						
 						return HidDeviceInfo(
 							devicePath,
+							manufacturerString,
+							productString,
 							caps.GetInputReportByteLength(),
 							caps.GetOutputReportByteLength(),
 							vendorId,
