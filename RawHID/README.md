@@ -203,7 +203,7 @@ To read data from a device, use `.Read(...)` method:
         }
         
         if err is DeviceNotConnected {
-          ; Try to re-open the device and continue readnig, or just return.
+          ; Try to re-open the device and continue reading, or just return.
           Sleep(5000)
   
           device.Open(&err, HID_READ)

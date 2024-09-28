@@ -1,6 +1,6 @@
 #Include <RawHID\HidDevices>
 #Include <RawHID\HidDevice>
-#Include <Common\StopWatch>
+#Include <Common\Stopwatch>
 #Include <Keyboards\HidConstants>
 
 class I44 {
@@ -43,8 +43,7 @@ class I44 {
 	static Ping(&ms) {
 		ms := -1
 		
-		sw := StopWatch()
-		sw.Start()
+		sw := Stopwatch.StartNew()
 		
 		device := this.NewDevice()
 		

@@ -7,9 +7,11 @@
  * ```ahk
  * #Requires AutoHotkey v2.0
  * 
- * sw := StopWatch()
- * 
+ * sw := Stopwatch()
  * sw.Start()
+ * ; or 
+ * sw := Stopwatch.StartNew()
+ * 
  * ; Activity to be timed
  * sw.Stop()
  * 
@@ -17,7 +19,7 @@
  * MsgBox(sw.ElapsedMicroseconds)
  * ```
  */
-class StopWatch {
+class Stopwatch {
 	static Frequency := 0
 	
 	_startingTime := 0
@@ -27,6 +29,13 @@ class StopWatch {
 		DllCall("Kernel32\QueryPerformanceFrequency", "Int64*", &frequency:=0)
 		this.Frequency := frequency
 	}
+	
+	static StartNew() {
+		sw := Stopwatch()
+		sw.Start()
+		return sw
+	}
+	
 	
 	Start() {
 		if this._endingTime {
@@ -50,7 +59,7 @@ class StopWatch {
 		this._startingTime := this._endingTime := 0
 	}
 	
-	ElapsedMilliseconds => Round((this._endingTime-this._startingTime) * 1000 / StopWatch.Frequency)
+	ElapsedMilliseconds => Round((this._endingTime-this._startingTime) * 1000 / Stopwatch.Frequency)
 	
-	ElapsedMicroseconds => Round((this._endingTime-this._startingTime) * 1000000 / StopWatch.Frequency)
+	ElapsedMicroseconds => Round((this._endingTime-this._startingTime) * 1000000 / Stopwatch.Frequency)
 }
