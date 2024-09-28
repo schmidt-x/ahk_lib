@@ -57,7 +57,7 @@ UsagePage := 0xFF60 ; The usage page of the Raw HID interface
 
 DeviceInfo := HidDevices.Find(VendorID, ProductID, UsageID, UsagePage, &err)
 if err {
-  MsgBox("Error at finding the device: " err.Message)
+  MsgBox(err is DeviceNotFound ? "Device not found" : err.Message)
   ExitApp()
 }
 
@@ -132,7 +132,11 @@ To simply send data to a device, call `.Write(...)` method:
 	
   device.Write(output, &err)
   if err {
-    MsgBox("Error at writing: " err.Message)
+    if err is DeviceNotConnected {
+      ; Device got disconnected.
+    } else {
+      MsgBox("Failed to write: " err.Message)
+    }
     return
   }
 }
@@ -146,7 +150,7 @@ Raw version:
 
   output := Buffer(device.OutputRawBufferSize, 0)
 
-  ; Note that the first byte is Report ID and should be ignored.
+  ; Note that the first byte is Report ID and should be set to 0.
   ; Hence, we specify 1 as an Offset to skip it:
   NumPut(
     "UChar", 1,
@@ -158,8 +162,7 @@ Raw version:
 
   device.WriteRaw(output, &err)
   if err {
-    MsgBox("Error at writing: " err.Message)
-    return
+    ; ...
   }
 }
 ```
@@ -181,7 +184,11 @@ To read data from a device, use `.Read(...)` method:
   ; Since, in this case, we're going to only read from the device, it's opened with the reading rights.
   device.Open(&err, HID_READ)
   if err {
-    MsgBox("Error at opening: " err.Message)
+    if err is DeviceNotConnected {
+      ; ...
+    } else {
+      MsgBox("Failed to open the device: " err.Message)
+    }
     return
   }
 	
@@ -195,8 +202,18 @@ To read data from a device, use `.Read(...)` method:
           continue
         }
         
-        MsgBox("Error at reading: " err.Message)
-        return
+        if err is DeviceNotConnected {
+          ; Try to re-open the device and continue readnig, or just return.
+          Sleep(5000)
+  
+          device.Open(&err, HID_READ)
+          if err {
+            MsgBox("Failed to re-open the device: " err.Message)
+            return
+          } else { ; Continue reading
+            continue
+          }
+        }
       }
 
       ; Do something with the data
@@ -247,20 +264,20 @@ DllCall("kernel32\QueryPerformanceFrequency", "Int64*", &Frequency:=0)
 	
   device.Open(&err)
   if err {
-    MsgBox("Error at opening: " err.Message)
+    MsgBox("Failed to open: " err.Message)
     return
   }
 	
   try {
     device.Write([], &err)
     if err {
-      MsgBox("Error at writing: " err.Message)
+      MsgBox("Failed to write: " err.Message)
       return
     }
 		
     _ := device.Read(1000, &err)
     if err {
-      MsgBox("Error at reading: " err.Message)
+      MsgBox("Failed to read: " err.Message)
       return
     }
 		

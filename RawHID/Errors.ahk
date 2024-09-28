@@ -8,3 +8,15 @@ class OSErrorC extends Error {
 		super.__New(message, what)
 	}
 }
+
+class DeviceNotConnected extends Error {
+	__New(message := "Device not connected.", what := -1) {
+		super.__New(message, what)
+	}
+}
+
+class DeviceNotFound extends Error {
+	__New(message := "Device not found.", what := -1) {
+		super.__New(message, what)
+	}
+}

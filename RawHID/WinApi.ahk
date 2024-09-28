@@ -51,11 +51,13 @@ DIGCF_DEVICEINTERFACE := 0x00000010
 
 ; --- winerror.h ---
 
-ERROR_FILE_NOT_FOUND      := 2
-ERROR_HANDLE_EOF          := 38
-ERROR_INSUFFICIENT_BUFFER := 122
-WAIT_TIMEOUT              := 258
-ERROR_IO_PENDING          := 997
+ERROR_FILE_NOT_FOUND       := 2
+ERROR_HANDLE_EOF           := 38
+ERROR_INSUFFICIENT_BUFFER  := 122
+WAIT_TIMEOUT               := 258
+ERROR_IO_INCOMPLETE        := 996
+ERROR_IO_PENDING           := 997
+ERROR_DEVICE_NOT_CONNECTED := 1167
 
 
 ; ========================= Structs =========================

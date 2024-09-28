@@ -154,28 +154,45 @@ class HidDevice {
 				
 				if A_LastError != ERROR_IO_PENDING {
 					errorCode := A_LastError
-					err := OSErrorC("Failed to write: " _GetErrorMessage(), errorCode)
+					
+					switch errorCode {
+						case ERROR_DEVICE_NOT_CONNECTED:
+							shouldClose := true
+							err := DeviceNotConnected()
+						
+						default:
+							err := OSErrorC("Failed to write: " _GetErrorMessage(), errorCode)
+					}
+					
 					return
 				}
 				
-				waitResult := DllCall("kernel32\WaitForSingleObject", "Ptr", hWriteEvent, "UInt", 200)
+				succeeded := DllCall("kernel32\GetOverlappedResultEx",
+					"Ptr",   this._hDevice,
+					"Ptr",   writeOl,
+					"UInt*", &bytesWritten:=0,
+					"UInt",  200,
+					"Int",   false)
 				
-				switch waitResult {
-					case WAIT_OBJECT_0:
-						return
-					
-					case WAIT_TIMEOUT:
+				if succeeded && bytesWritten == this._outputReportByteLength {
+					return
+				}
+				
+				errorCode := A_LastError
+				
+				switch (errorCode) {
+					case ERROR_IO_INCOMPLETE, WAIT_TIMEOUT:
 						if not DllCall("kernel32\CancelIoEx", "Ptr", this._hDevice, "Ptr", writeOl) {
 							; TODO: to log
 						}
 						err := TimeoutError("Writing timed out.")
-						
-					case WAIT_FAILED:
-						errorCode := A_LastError
-						err := OSErrorC("Failed to wait for writing: " _GetErrorMessage(), errorCode)
+					
+					case ERROR_DEVICE_NOT_CONNECTED:
+						shouldClose := true
+						err := DeviceNotConnected()
 					
 					default:
-						throw Error("Shouldn't reach here.")
+						err := OSErrorC("Failed to wait for writing: " _GetErrorMessage(), errorCode)
 				}
 				
 				return
@@ -228,28 +245,45 @@ class HidDevice {
 				
 				if A_LastError != ERROR_IO_PENDING {
 					errorCode := A_LastError
-					err := OSErrorC("Failed to read: " _GetErrorMessage(), errorCode)
+					
+					switch errorCode {
+						case ERROR_DEVICE_NOT_CONNECTED:
+							shouldClose := true
+							err := DeviceNotConnected()
+						
+						default:
+							err := OSErrorC("Failed to read: " _GetErrorMessage(), errorCode)
+					}
+					
 					return ""
 				}
 				
-				waitResult := DllCall("kernel32\WaitForSingleObject", "Ptr", hReadEvent, "UInt", timeout)
-					
-				switch waitResult {
-					case WAIT_OBJECT_0:
-						return input
-					
-					case WAIT_TIMEOUT:
+				succeeded := DllCall("kernel32\GetOverlappedResultEx",
+					"Ptr",   this._hDevice,
+					"Ptr",   readOl,
+					"UInt*", &bytesRead:=0,
+					"UInt",  timeout,
+					"Int",   false)
+				
+				if succeeded && bytesRead == this._inputReportByteLength {
+					return input
+				}
+				
+				errorCode := A_LastError
+				
+				switch (errorCode) {
+					case ERROR_IO_INCOMPLETE, WAIT_TIMEOUT:
 						if not DllCall("kernel32\CancelIoEx", "Ptr", this._hDevice, "Ptr", readOl) {
 							; TODO: to log
 						}
 						err := TimeoutError("Reading timed out.")
 					
-					case WAIT_FAILED:
-						errorCode := A_LastError
-						err := OSErrorC("Failed to wait for reading: " _GetErrorMessage(), errorCode)
-					
+					case ERROR_DEVICE_NOT_CONNECTED:
+						shouldClose := true
+						err := DeviceNotConnected()
+						
 					default:
-						throw Error("Shouldn't reach here.")
+						err := OSErrorC("Failed to wait for reading: " _GetErrorMessage(), errorCode)
 				}
 				
 				return ""
@@ -282,10 +316,10 @@ class HidDevice {
 		if hDevice == INVALID_HANDLE_VALUE {
 			errorCode := A_LastError
 			
-			err := OSErrorC("Failed to open a device: " (errorCode == ERROR_FILE_NOT_FOUND 
-				? "Device not found."
-				: _GetErrorMessage()), errorCode)
-				
+			err := errorCode == ERROR_FILE_NOT_FOUND
+				? err := DeviceNotConnected()
+				: err := OSErrorC(_GetErrorMessage, errorCode)
+			
 			return
 		}
 		
