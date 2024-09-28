@@ -7,6 +7,8 @@ class Paths {
 	static Radeon    := "D:\Radeon ReLive\unknown"
 	static ScriptDir := A_ScriptDir
 	
+	static ProgramFiles := A_ProgramFiles
+	
 	static Projects        := "D:\Projects"
 	static ProjectsCSharp  := this.Projects "\CSharp"
 	static ProjectsRust    := this.Projects "\Rust"

@@ -41,10 +41,6 @@ StrIsEmptyOrWhiteSpace(str) {
 	return true
 }
 
-MoveCursorToFileBeginning() => SendInput("^{Home}")
-
-MoveCursorToFileEnd() => SendInput("^{End}")
-
 ThrowIfError(err) {
 	if err {
 		throw err
@@ -121,7 +117,7 @@ Bin2Dec(input) {
 	i := len+1
 	while --i > 0 {
 		switch SubStr(input, i, 1) {
-			case "0": ; it's break of the switch
+			case "0": ; break
 			case "1": res += 1 << j
 			case "_": continue
 			default:  return -1
@@ -267,8 +263,26 @@ GetFilterKeys() {
 	}
 }
 
+ToggleTaskbar() {
+	ABM_GETSTATE := 0x04
+	ABM_SETSTATE := 0x0A
+	
+	ABS_AUTOHIDE    := 0x01
+	ABS_ALWAYSONTOP := 0x02
+	
+	cbSize := 48
+	abd := Buffer(cbSize, 0)
+	NumPut("UInt", cbSize, abd)
+	
+	state := DllCall("shell32\SHAppBarMessage", "UInt", ABM_GETSTATE, "Ptr", abd)
+	lParam := (state & ABS_AUTOHIDE) ? ABS_ALWAYSONTOP : ABS_AUTOHIDE
+	
+	NumPut("Int64", lParam, abd, 40)
+	DllCall("shell32\SHAppBarMessage", "UInt", ABM_SETSTATE, "Ptr", abd)
+}
 
-; --- Blind Input ---
+
+; --- Input Helpers ---
 	
 SendBlindUp() => SendInput("{Blind}{Up}")
 
@@ -279,3 +293,7 @@ SendBlindEnter() => SendInput("{Blind}{Enter}")
 SendBlindLeft() => SendInput("{Blind}{Left}")
 
 SendBlindRight() => SendInput("{Blind}{Right}")
+
+MoveCursorToFileBeginning() => SendInput("^{Home}")
+
+MoveCursorToFileEnd() => SendInput("^{End}")
