@@ -317,8 +317,8 @@ class HidDevice {
 			errorCode := A_LastError
 			
 			err := errorCode == ERROR_FILE_NOT_FOUND
-				? err := DeviceNotConnected()
-				: err := OSErrorC(_GetErrorMessage, errorCode)
+				? DeviceNotConnected()
+				: OSErrorC(_GetErrorMessage(), errorCode)
 			
 			return
 		}
