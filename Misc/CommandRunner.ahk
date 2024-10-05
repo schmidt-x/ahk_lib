@@ -11,7 +11,6 @@ class CommandRunner {
 	 * @type {Gui.Control}
 	 */
 	static _consoleEdit     := unset
-	static _consoleEditHwnd := unset
 	
 	static _xPos := A_ScreenWidth / 2
 	static _yPos := A_ScreenHeight / 100 * 20
@@ -26,7 +25,6 @@ class CommandRunner {
 	 * @type {Gui.Control}
 	 */
 	static _outputEdit       := unset
-	static _outputEditHwnd   := unset
 	static _outputEditHeight := 350
 	static _outputEditPaddY  := 15
 	
@@ -112,22 +110,28 @@ class CommandRunner {
 
 	; TODO: probably should redo using dynamic hotkeys
 	static _OnKEYDOWN(wParam, lParam, msg, hwnd) {
-		static VK_BACK   := 0x08
-		static VK_RETURN := 0x0D
-		static VK_ESCAPE := 0x1B
+		isEdit   := hwnd == this._consoleEdit.Hwnd
+		isOutput := hwnd == this._outputEdit.Hwnd
 		
-		if hwnd != this._consoleEditHwnd {
+		if !isEdit && !isOutput {
 			return
 		}
+		
+		VK_BACK   := 0x08
+		VK_RETURN := 0x0D
+		VK_ESCAPE := 0x1B
 		
 		switch wParam {
 		case VK_ESCAPE:
 			this._escaped := true
 			this._Close()
 		case VK_RETURN:
+			if !isEdit {
+				return
+			}
 			this._Execute()
 		case VK_BACK:
-			if not GetKeyState("LCtrl", "P") {
+			if !IsEdit || !GetKeyState("LCtrl", "P") {
 				return
 			} 
 			SendInput("{Blind}+{Left}{Del}")
@@ -198,7 +202,7 @@ class CommandRunner {
 		this._consoleEdit.Value := ""
 		
 		if StrIsEmptyOrWhiteSpace(input) {
-			this._DisplayOutput("Empty input.")
+			this._ShowOutput("Empty input.")
 			return
 		}
 		
@@ -206,7 +210,7 @@ class CommandRunner {
 		
 		func := this._commands.Get(command)
 		if not func {
-			this._DisplayOutput(Format("Command «{}» not found.", command))
+			this._ShowOutput(Format("Command «{}» not found.", command))
 			return
 		}
 		
@@ -218,7 +222,7 @@ class CommandRunner {
 		}
 		
 		if IsSet(output) {
-			this._DisplayOutput(output)
+			this._ShowOutput(output)
 		} else if this._outputEdit.Visible {
 			this._HideOutput()
 		}
@@ -244,16 +248,16 @@ class CommandRunner {
 		}
 	}
 	
-	static _DisplayOutput(output) {
+	static _ShowOutput(output) {
 		this._outputEdit.Visible := true
 		this._outputEdit.Value := output
-		ControlShow(this._outputEditHwnd)
+		ControlShow(this._outputEdit.Hwnd)
 	}
 	
 	static _HideOutput() {
 		this._outputEdit.Value := ""
 		this._outputEdit.Visible := false
-		ControlHide(this._outputEditHwnd)
+		ControlHide(this._outputEdit.Hwnd)
 	}
 	
 	static _InitCommands() {
@@ -277,7 +281,6 @@ class CommandRunner {
 		
 		editOpts := Format("Background171717 -E0x200 Center w{1} h{2}", this._width, this._height)
 		this._consoleEdit := this._console.AddEdit(editOpts)
-		this._consoleEditHwnd := ControlGetHwnd(this._consoleEdit)
 		
 		editOpts := Format(
 			"Background171717 -E0x200 xP yP+{1} wP h{2} -VScroll ReadOnly Hidden", 
@@ -285,7 +288,6 @@ class CommandRunner {
 			this._outputEditHeight)
 			
 		this._outputEdit := this._console.AddEdit(editOpts)
-		this._outputEditHwnd := ControlGetHwnd(this._outputEdit)
 		
 		this._console.Show("Hide")
 		

@@ -1,10 +1,10 @@
+#Include <System\Paths>
 #Include <Misc\CommandRunner>
 
 class Telegram {
 	static _processName     := "Telegram.exe"
 	static _winProcessName  := "ahk_exe " this._processName
-	static _fullProcessName := A_AppData . "\Telegram Desktop\" this._processName
-	
+	static _fullProcessName := Paths.Roaming . "\Telegram Desktop\" this._processName
 	
 	static ProcessName => this._processName
 	static IsActive => WinActive(this._winProcessName)

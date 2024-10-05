@@ -1,4 +1,4 @@
-# Ahk_Lib
+# ahk_lib
 
 ### This repo contains a collection of shared, reusable classes and functions for my AHK scripts.
 

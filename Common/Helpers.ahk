@@ -206,10 +206,9 @@ SetFilterKeys(onOff?, waitMSec?, delayMSec?, repeatMSec?, bounceMSec?) {
 		"UInt", bounceMSec ?? fKeys.BounceMSec,
 		FILTERKEYS)
 	
-	SPI_SETFILTERKEYS := 0x0033
-	
-	SPIF_UPDATEINIFILE := 0x0001
-	SPIF_SENDCHANGE    := 0x0002
+	SPI_SETFILTERKEYS  := 0x0033
+	SPIF_UPDATEINIFILE := 0x01
+	SPIF_SENDCHANGE    := 0x02
 	
 	fWinIni := SPIF_UPDATEINIFILE | SPIF_SENDCHANGE
 	
