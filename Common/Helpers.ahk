@@ -47,7 +47,7 @@ ThrowIfError(err) {
 	}
 }
 
-DragWindow() {
+DragWindow(keyToHold) {
 	MouseGetPos(&prevMouseX, &prevMouseY, &winHWND)
 	
 	if WinGetMinMax(winHWND) { ; Only if the window isn't maximized
@@ -72,7 +72,7 @@ DragWindow() {
 		prevWinX := newWinX
 		prevWinY := newWinY
 		
-		if !GetKeyState("LButton", "P") {
+		if !GetKeyState(keyToHold, "P") {
 			break
 		}
 	}
@@ -266,15 +266,14 @@ ToggleTaskbar() {
 	ABM_GETSTATE := 0x04
 	ABM_SETSTATE := 0x0A
 	
-	ABS_AUTOHIDE    := 0x01
-	ABS_ALWAYSONTOP := 0x02
+	ABS_AUTOHIDE := 0x01
 	
 	cbSize := 48
 	abd := Buffer(cbSize, 0)
 	NumPut("UInt", cbSize, abd)
 	
 	state := DllCall("shell32\SHAppBarMessage", "UInt", ABM_GETSTATE, "Ptr", abd)
-	lParam := (state & ABS_AUTOHIDE) ? ABS_ALWAYSONTOP : ABS_AUTOHIDE
+	lParam := (state & ABS_AUTOHIDE) ? 0 : ABS_AUTOHIDE
 	
 	NumPut("Int64", lParam, abd, 40)
 	DllCall("shell32\SHAppBarMessage", "UInt", ABM_SETSTATE, "Ptr", abd)

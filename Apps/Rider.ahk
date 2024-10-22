@@ -206,4 +206,6 @@ class Rider {
 	static SelectTab6() => SendInput("!^7")
 	
 	static SelectLastTab() => SendInput("!^0")
+	
+	static JumpToQueryConsole() => SendInput("+^{F10}")
 }

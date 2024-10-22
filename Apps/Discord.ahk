@@ -3,7 +3,7 @@
 class Discord {
 	static _processName     := "Discord.exe"
 	static _winProcessName  := "ahk_exe " this._processName
-	static _fullProcessName :=  Paths.User "\AppData\Local\Discord\Update.exe --processStart " this._processName
+	static _fullProcessName :=  Paths.Local "\Discord\Update.exe --processStart " this._processName
 	
 	static ProcessName => this._processName
 	static IsActive => WinActive(this._winProcessName)
