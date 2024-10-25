@@ -15,7 +15,7 @@ class HidDevices {
 		}
 		
 		if devicePaths.Length == 0 {
-			err := DeviceNotFound()
+			err := DeviceNotFoundError()
 			return ""
 		}
 		
@@ -126,7 +126,7 @@ class HidDevices {
 				}
 			}
 			
-			err := DeviceNotFound()
+			err := DeviceNotFoundError()
 			return ""
 			
 		} finally {

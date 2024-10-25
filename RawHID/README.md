@@ -57,7 +57,7 @@ UsagePage := 0xFF60 ; The usage page of the Raw HID interface
 
 DeviceInfo := HidDevices.Find(VendorID, ProductID, UsageID, UsagePage, &err)
 if err {
-  MsgBox(err is DeviceNotFound ? "Device not found" : err.Message)
+  MsgBox(err is DeviceNotFoundError ? "Device not found" : err.Message)
   ExitApp()
 }
 
@@ -132,7 +132,7 @@ To simply send data to a device, call `.Write(...)` method:
 	
   device.Write(output, &err)
   if err {
-    if err is DeviceNotConnected {
+    if err is DeviceNotConnectedError {
       ; Device got disconnected.
     } else {
       MsgBox("Failed to write: " err.Message)
@@ -184,7 +184,7 @@ To read data from a device, use `.Read(...)` method:
   ; Since, in this case, we're going to only read from the device, it's opened with the reading rights.
   device.Open(&err, HID_READ)
   if err {
-    if err is DeviceNotConnected {
+    if err is DeviceNotConnectedError {
       ; ...
     } else {
       MsgBox("Failed to open the device: " err.Message)
@@ -202,7 +202,7 @@ To read data from a device, use `.Read(...)` method:
           continue
         }
         
-        if err is DeviceNotConnected {
+        if err is DeviceNotConnectedError {
           ; Try to re-open the device and continue reading, or just return.
           Sleep(5000)
   

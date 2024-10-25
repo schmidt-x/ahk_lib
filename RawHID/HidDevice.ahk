@@ -158,7 +158,7 @@ class HidDevice {
 					switch errorCode {
 						case ERROR_DEVICE_NOT_CONNECTED:
 							shouldClose := true
-							err := DeviceNotConnected()
+							err := DeviceNotConnectedError()
 						
 						default:
 							err := OSErrorC("Failed to write: " _GetErrorMessage(), errorCode)
@@ -189,7 +189,7 @@ class HidDevice {
 					
 					case ERROR_DEVICE_NOT_CONNECTED:
 						shouldClose := true
-						err := DeviceNotConnected()
+						err := DeviceNotConnectedError()
 					
 					default:
 						err := OSErrorC("Failed to wait for writing: " _GetErrorMessage(), errorCode)
@@ -249,7 +249,7 @@ class HidDevice {
 					switch errorCode {
 						case ERROR_DEVICE_NOT_CONNECTED:
 							shouldClose := true
-							err := DeviceNotConnected()
+							err := DeviceNotConnectedError()
 						
 						default:
 							err := OSErrorC("Failed to read: " _GetErrorMessage(), errorCode)
@@ -280,7 +280,7 @@ class HidDevice {
 					
 					case ERROR_DEVICE_NOT_CONNECTED:
 						shouldClose := true
-						err := DeviceNotConnected()
+						err := DeviceNotConnectedError()
 						
 					default:
 						err := OSErrorC("Failed to wait for reading: " _GetErrorMessage(), errorCode)
@@ -317,7 +317,7 @@ class HidDevice {
 			errorCode := A_LastError
 			
 			err := errorCode == ERROR_FILE_NOT_FOUND
-				? DeviceNotConnected()
+				? DeviceNotConnectedError()
 				: OSErrorC(_GetErrorMessage(), errorCode)
 			
 			return
