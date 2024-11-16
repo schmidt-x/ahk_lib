@@ -1,0 +1,3 @@
+[submodule "RawHID"]
+	path = RawHID
+	url = https://github.com/schmidt-x/RawHID.git

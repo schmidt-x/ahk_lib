@@ -7,8 +7,8 @@ class I44 {
 	static _vendorID  := 0xFEED
 	static _productID := 0x0003
 	
-	static _usageID   := 0x61
 	static _usagePage := 0xFF60
+	static _usageID   := 0x61
 	
 	/**
 	 * @type {HidDeviceInfo}
@@ -16,7 +16,7 @@ class I44 {
 	static _deviceInfo := unset
 	
 	static __New() {
-		deviceInfo := HidDevices.Find(this._vendorID, this._productID, this._usageID, this._usagePage, &err)
+		deviceInfo := HidDevices.Find(this._vendorID, this._productID, this._usagePage, this._usageID, &err)
 		if err {
 			throw err
 		}
