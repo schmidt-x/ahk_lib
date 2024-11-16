@@ -164,24 +164,9 @@ class CommandRunner {
 	}
 	
 	static _OnINPUTLANGCHANGEREQUEST(wParam, lParam, msg, hwnd) {
-		static INPUTLANGCHANGE_SYSCHARSET := 0x01
-		static INPUTLANGCHANGE_FORWARD    := 0x02
-		static INPUTLANGCHANGE_BACKWARD   := 0x04
-		static HKL_PREV := 0
-		static HKL_NEXT := 1
-		
-		if hwnd != this._console.Hwnd {
-			return
+		if hwnd == this._console.Hwnd {
+			return DllCall("user32\DefWindowProc", "Ptr", hwnd, "UInt", msg, "Ptr", wParam, "Ptr", lParam)
 		}
-		
-		switch wParam {
-			case INPUTLANGCHANGE_BACKWARD:   hkl := HKL_PREV
-			case INPUTLANGCHANGE_FORWARD:    hkl := HKL_NEXT
-			case INPUTLANGCHANGE_SYSCHARSET: hkl := lParam
-			default: return 0
-		}
-		
-		DllCall("ActivateKeyboardLayout", "Ptr", hkl, "UInt", 0)
 	}
 	
 	; TODO: add docs
@@ -198,7 +183,7 @@ class CommandRunner {
 	
 	; TODO: add docs
 	static _Execute() {
-		input := this._consoleEdit.Value
+		input := Trim(this._consoleEdit.Value)
 		this._consoleEdit.Value := ""
 		
 		if StrIsEmptyOrWhiteSpace(input) {
@@ -234,7 +219,7 @@ class CommandRunner {
 			parts := StrSplit(input, A_Space, , 2)
 			
 			command := parts[1]
-			args := parts.Length == 2 ? parts[2] : ""
+			args := (parts.Length == 2 && trimmedArgs := LTrim(parts[2])) ? trimmedArgs : ""
 		}
 	}
 	
