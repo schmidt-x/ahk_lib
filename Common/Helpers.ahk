@@ -18,11 +18,13 @@ MoveMouseToCenter() {
 	MouseMove(x + width/2, y + height/2)
 }
 
-ClipSend(str) {
-	prevClip := ClipboardAll()
+ClipSend(str, restore := true) {
+	prevClip := restore ? ClipboardAll() : ""
 	A_Clipboard := str
 	SendInput("^v")
-	SetTimer(() => A_Clipboard := prevClip, -50)
+	if restore {
+		SetTimer(() => A_Clipboard := prevClip, -50)
+	}
 }
 
 StrIsEmptyOrWhiteSpace(str) {

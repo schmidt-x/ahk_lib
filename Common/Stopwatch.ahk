@@ -20,15 +20,11 @@
  * ```
  */
 class Stopwatch {
-	static Frequency := 0
+	_isRunning := false
+	_startTimeStamp := 0
+	_elapsed := 0
 	
-	_startingTime := 0
-	_endingTime   := 0
-	
-	static __New() {
-		DllCall("Kernel32\QueryPerformanceFrequency", "Int64*", &frequency:=0)
-		this.Frequency := frequency
-	}
+	static Frequency := (DllCall("Kernel32\QueryPerformanceFrequency", "Int64*", &f:=0), f)
 	
 	static StartNew() {
 		sw := Stopwatch()
@@ -36,30 +32,45 @@ class Stopwatch {
 		return sw
 	}
 	
-	
 	Start() {
-		if this._endingTime {
-			this._endingTime := 0
+		if !this._isRunning {
+			this._startTimeStamp := this._GetTimeStamp()
+			this._isRunning := true
 		}
-		
-		DllCall("Kernel32\QueryPerformanceCounter", "Int64*", &startingTime:=0)
-		this._startingTime := startingTime
 	}
 	
 	Stop() {
-		if not this._startingTime {
-			return
+		if this._isRunning {
+			this._elapsed += this._GetTimeStamp() - this._startTimeStamp
+			this._isRunning := false
 		}
-		
-		DllCall("Kernel32\QueryPerformanceCounter", "Int64*", &endingTime:=0)
-		this._endingTime := endingTime
 	}
 	
 	Reset() {
-		this._startingTime := this._endingTime := 0
+		this._startTimeStamp := this._elapsed := this._isRunning := 0
 	}
 	
-	ElapsedMilliseconds => Round((this._endingTime-this._startingTime) * 1000 / Stopwatch.Frequency)
+	Restart() {
+		this._elapsed := 0
+		this._startTimeStamp := this._GetTimeStamp()
+		this._isRunning := true
+	}
 	
-	ElapsedMicroseconds => Round((this._endingTime-this._startingTime) * 1000000 / Stopwatch.Frequency)
+	ElapsedMilliseconds => Round(this._GetRawElapsedTicks() * 1000 / Stopwatch.Frequency)
+	
+	ElapsedMicroseconds => Round(this._GetRawElapsedTicks() * 1000000 / Stopwatch.Frequency)
+	
+	
+	_GetRawElapsedTicks() {
+		elapsed := this._elapsed
+		if this._isRunning {
+			elapsed += this._GetTimeStamp() - this._startTimeStamp
+		}
+		return elapsed
+	}
+	
+	_GetTimeStamp() {
+		DllCall("Kernel32\QueryPerformanceCounter", "Int64*", &timeStamp:=0)
+		return timeStamp
+	}
 }
