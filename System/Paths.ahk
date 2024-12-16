@@ -74,7 +74,7 @@ class Paths {
 	
 	
 	/**
-	 * Tries to find the path of a selected tab in File Explorer
+	 * Attempts to find a path of a selected tab in File Explorer
 	 * @param {&String} path
 	 * Path to the selected tab is assigned on `return` (if found)
 	 * @param {Integer} hwnd
@@ -86,9 +86,7 @@ class Paths {
 	 * `True` if path is found; `False` otherwise
 	 */
 	static TryGet(&path, hwnd := 0, clsid := false) {
-		if !IsSet(path) {
-			path := ""
-		}
+		path := ""
 		
 		if not hwnd {
 			hwnd := WinActive("A")
@@ -103,7 +101,8 @@ class Paths {
 			return true
 		}
 		
-		title := WinGetTitle(hwnd)
+		; get WinTitle and remove the suffix
+		title := RegExReplace(WinGetTitle(hwnd), " (?:and [0-9]+ more tabs? )?- File Explorer$")
 		
 		for window in ComObject("Shell.Application").Windows {
 			if window.hwnd != hwnd || window.Document.Folder.Self.Name != title {
