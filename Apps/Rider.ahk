@@ -147,7 +147,7 @@ class Rider {
 	
 	static Structure() => SendInput("!7")
 	
-	static ILViewer() => SendInput("!4")
+	static IL() => SendInput("!4")
 	
 	; --- ---
 	

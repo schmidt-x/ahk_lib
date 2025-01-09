@@ -142,7 +142,7 @@ class Paths {
 			paths := StrSplit(A_Clipboard, "`r`n")
 		}
 		
-		SetTimer(() => A_Clipboard := prevClip, -50)
+		A_Clipboard := prevClip
 		return paths
 	}
 }

@@ -8,11 +8,6 @@ ScrollDown() {
 	SendInput("{WheelDown 2}")
 }
 
-Display(text, removeAfter := 1000, whichTooltip := 1, X := 0, Y := 0) {
-	ToolTip(text, X, Y, whichTooltip)
-	SetTimer(() => ToolTip(, , , whichTooltip), -removeAfter)
-}
-
 MoveMouseToCenter() {
 	WinGetPos(&x, &y, &width, &height, "A")
 	MouseMove(x + width/2, y + height/2)
@@ -156,13 +151,8 @@ SetLang(hkl) {
 	
 	if WinGetClass(hwnd) == "#32770" {
 		lpEnumFunc := CallbackCreate(PostToChildWindows, "Fast")
-		
-		try {
-			DllCall("User32\EnumChildWindows", "Ptr", hwnd, "Ptr", lpEnumFunc, "Ptr", hkl)
-		} finally {
-			CallbackFree(lpEnumFunc)
-		}
-		
+		try DllCall("User32\EnumChildWindows", "Ptr", hwnd, "Ptr", lpEnumFunc, "Ptr", hkl)
+		finally CallbackFree(lpEnumFunc)
 	}
 	
 	PostToChildWindows(hwnd, lParam) {
