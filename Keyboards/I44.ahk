@@ -24,15 +24,25 @@ class I44 {
 		this._deviceInfo := deviceInfo
 	}
 	
+	static _NORMAL := 0
+	static _INSERT := 1
+	static _SELECT := 2
+	static _SYMBOL := 3
+	static _U_SYMB := 4
+	static _MOUSE  := 5
+	static _SYSTEM := 6
+	
 	static NewDevice() => HidDevice(this._deviceInfo)
 	
-	static EnableAhk(&err) {
-		this.NewDevice().Write([HID_AHK, 1], &err)
-	}
+	static EnableAhk(&err) => this.NewDevice().Write([HID_AHK, 1], &err)
 	
-	static DisableAhk(&err) {
-		this.NewDevice().Write([HID_AHK, 0], &err)
-	}
+	static DisableAhk(&err) => this.NewDevice().Write([HID_AHK, 0], &err)
+	
+	static SetMouseLayer(&err) => this.SetLayer(1 << this._MOUSE, &err)
+	
+	static SetLayer(layerMask, &err) => this.NewDevice().Write([HID_SET_LAYER, layerMask >> 8, layerMask], &err)
+	
+	static Default(&err, device?) => (device ?? this.NewDevice()).Write([HID_DEFAULT], &err)
 	
 	/**
 	 * Checks if a keyboard is resposive and measures the ReadWrite time by simply sending `HID_PING`
@@ -42,9 +52,7 @@ class I44 {
 	 */
 	static Ping(&ms) {
 		ms := -1
-		
 		sw := Stopwatch.StartNew()
-		
 		device := this.NewDevice()
 		
 		device.Open(&err)
@@ -69,14 +77,10 @@ class I44 {
 			if err {
 				return false
 			}
-		} finally {
-			device.Close()
-		}
+		} finally device.Close()
 		
 		sw.Stop()
-		
 		ms := sw.ElapsedMilliseconds
 		return true
 	}
-	
 }

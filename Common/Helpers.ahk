@@ -1,11 +1,11 @@
 ScrollUp() {
 	MoveMouseToCenter()
-	SendInput("{WheelUp 2}")
+	SendEvent("{WheelUp 2}")
 }
 
 ScrollDown() {
 	MoveMouseToCenter()
-	SendInput("{WheelDown 2}")
+	SendEvent("{WheelDown 2}")
 }
 
 MoveMouseToCenter() {
