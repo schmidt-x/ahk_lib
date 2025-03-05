@@ -1,5 +1,4 @@
 #Include <System\Paths>
-#Include <Misc\CommandRunner>
 
 class Obsidian {
 	static _processName     := "Obsidian.exe"
@@ -8,12 +7,6 @@ class Obsidian {
 	
 	static ProcessName => this._processName
 	static IsActive => WinActive(this._winProcessName)
-	
-	static __New() {
-		CommandRunner.AddCommands("obsid", this.Open.Bind(this))
-	}
-	
-	static Open(*) => Run(this._fullProcessName)
 	
 	
 	; --- Shortcuts ---

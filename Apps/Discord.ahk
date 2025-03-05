@@ -8,14 +8,6 @@ class Discord {
 	static ProcessName => this._processName
 	static IsActive => WinActive(this._winProcessName)
 	
-	static Run() {
-		if hwnd := WinExist(this._winProcessName) {
-			WinActivate(hwnd)
-		} else {
-			Run(this._fullProcessName)
-		}
-	}
-	
 	
 	; --- Shortcuts ---
 	

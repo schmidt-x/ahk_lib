@@ -1,6 +1,5 @@
 #Include <System\Paths>
 #Include <Misc\CommandRunner>
-#Include <Common\Helpers>
 
 class WindowsTerminal {
 	static _processName     := "WindowsTerminal.exe"
@@ -13,29 +12,29 @@ class WindowsTerminal {
 	
 	static IsActive => WinActive(this._winProcessName)
 	
-	static Open(&args, hwnd, &output) {
-		if StrIsEmptyOrWhiteSpace(args) {
+	static Open(args, hwnd, &output) {
+		if not args.Next(&arg) {
 			Run(this._fullProcessName)
 			return
 		}
 		
-		if args == "." {
-			if !Paths.TryGet(&path, hwnd) {
-				output := "Path not found."
-				return
-			}
-			
-			Run(Format('{} -d "{}"', this._fullProcessName, path))
-			return
+		switch value := arg.Value {
+			case ".":
+				if not Paths.TryGet(&path, hwnd) {
+					output := "Path not found."
+				} else {
+					this._Run(path)
+				}
+			default:
+				if not Paths.TryGetFolderPath(value, &path) {
+					output := Format("Folder «{}» not found.", value)
+				} else {
+					this._Run(path)
+				}			
 		}
-		
-		if !Paths.TryGetFolderPath(args, &path) {
-			output := Format("Folder «{}» not found.", args)
-			return
-		}
-		
-		Run(Format('{} -d "{}"', this._fullProcessName, path))
 	}
+	
+	static _Run(path) => Run(Format('{} -d "{}"', this._fullProcessName, path))
 	
 	
 	; --- Shortcuts ---

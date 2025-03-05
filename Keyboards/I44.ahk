@@ -48,10 +48,13 @@ class I44 {
 	 * Checks if a keyboard is resposive and measures the ReadWrite time by simply sending `HID_PING`
 	 * output (with the current time) to the keyboard and waiting for the response.
 	 * @param {&Integer} ms On success, the measured time (in milliseconds) is stored. -1 otherwise.
+	 * @param {&Integer} ms On success, the measured time (in microseconds) is stored. -1 otherwise.
 	 * @returns {Boolean} `True` if the keyboard is responsive. `False` if not or timed out.
 	 */
-	static Ping(&ms) {
+	static Ping(&ms, &us) {
 		ms := -1
+		us := -1
+		
 		sw := Stopwatch.StartNew()
 		device := this.NewDevice()
 		
@@ -81,6 +84,7 @@ class I44 {
 		
 		sw.Stop()
 		ms := sw.ElapsedMilliseconds
+		us := sw.ElapsedMicroseconds
 		return true
 	}
 }

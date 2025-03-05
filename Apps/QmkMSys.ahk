@@ -1,5 +1,4 @@
 #Include <System\Paths>
-#Include <Common\Helpers>
 #Include <Misc\CommandRunner>
 
 class QmkMSys {
@@ -10,28 +9,25 @@ class QmkMSys {
 		CommandRunner.AddCommands("msys", this.Open.Bind(this))
 	}
 	
-	static Open(&folder, hwnd, &output) {
-		if StrIsEmptyOrWhiteSpace(folder) {
+	static Open(args, hwnd, &output) {
+		if not args.Next(&arg) {
 			Run(this._fullProcessNameWithArgs, Paths.Qmk)
 			return
 		}
 		
-		if folder == "." {
-			if !Paths.TryGet(&path, hwnd) {
-				output := "Path not found."
-				return
-			} 
-			
-			Run(this._fullProcessNameWithArgs, path)
-			return
+		switch value := arg.Value {
+			case ".":
+				if not Paths.TryGet(&path, hwnd) {
+					output := "Path not found."
+				} else {
+					Run(this._fullProcessNameWithArgs, path)
+				}
+			default:
+				if not Paths.TryGetFolderPath(value, &path) {
+					output := Format("Folder «{}» not found.", value)
+				} else {
+					Run(this._fullProcessNameWithArgs, path)
+				}
 		}
-		
-		if !Paths.TryGetFolderPath(folder, &p) {
-			output := Format("Folder «{}» not found.", folder)
-			return
-		}
-		
-		Run(this._fullProcessNameWithArgs, p)
 	}
-	
 }

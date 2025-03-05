@@ -1,5 +1,4 @@
 #Include <System\Paths>
-#Include <Common\Helpers>
 #Include <Misc\CommandRunner>
 
 class VsCode {
@@ -7,7 +6,9 @@ class VsCode {
 	static _winProcessName  := "ahk_exe " this._processName
 	static _fullProcessName := Paths.LocalPrograms "\Microsoft VS Code\" this._processName
 	
-	static ProcessName => this._processName
+	static ProcessName     => this._processName
+	static FullProcessName => this._fullProcessName
+	
 	static IsActive => WinActive(this._winProcessName)
 	
 	static __New() {
@@ -15,29 +16,26 @@ class VsCode {
 	}
 	
 	
-	; TODO: add docs and support different options (-p path, -f folder, etc)
-	static Open(&args, hwnd, &output) {
-		if StrIsEmptyOrWhiteSpace(args) {
+	static Open(args, hwnd, &output) {
+		if not args.Next(&arg) {
 			Run(this._fullProcessName)
 			return
 		}
 		
-		if args == "." {
-			if !Paths.TryGet(&p, hwnd) {
-				output := "Path not found."
-				return
-			}
-			
-			Run(Format('"{}" "{}"', this._fullProcessName, p))
-			return
+		switch value := arg.Value {
+			case ".":
+				if not Paths.TryGet(&path, hwnd) {
+					output := "Path not found."
+				} else {
+					this._Run(path)
+				}
+			default:
+				if not Paths.TryGetFolderPath(value, &path) {
+					output := Format("Folder «{}» not found.", value)
+				} else {
+					this._Run(path)
+				}
 		}
-		
-		if !Paths.TryGetFolderPath(args, &p) {
-			output := Format("Folder «{}» not found.", args)
-			return
-		}
-		
-		Run(Format('"{}" "{}"', this._fullProcessName, p))
 	}
 	
 	static OpenSelected(&err) {
@@ -51,6 +49,8 @@ class VsCode {
 			Run(Format('"{1}" {2}', this._fullProcessName, selectedPaths[A_Index]))
 		}
 	}
+	
+	static _Run(path) => Run(Format('"{}" "{}"', this._fullProcessName, path))
 	
 	
 	; --- Shortcuts ---

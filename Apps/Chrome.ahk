@@ -7,15 +7,6 @@ class Chrome {
 	static IsActive => WinActive(this._winProcessName)
 	
 	
-	static Run() {
-		if winHwnd := WinExist(this._winProcessName) {
-			WinActivate(winHwnd)
-		} else {
-			Run(this._fullProcessName)
-		}
-	}
-	
-	
 	; --- Shortcuts ---
 	
 	static NewTab() => SendInput("^t")

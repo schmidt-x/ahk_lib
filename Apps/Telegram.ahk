@@ -10,24 +10,14 @@ class Telegram {
 	static IsActive => WinActive(this._winProcessName)
 	
 	static __New() {
-		CommandRunner.AddCommands(
-			"tg",  this.Open.Bind(this),
-			"tg-", this.Close.Bind(this),
-		)
+		CommandRunner.AddCommands("tg",  this.Open.Bind(this))
 	}
-	
 	
 	static Open(*) {
 		if tgHwnd := WinExist(this._winProcessName) {
 			WinActivate(tgHwnd)
 		} else {
 			Run(this._fullProcessName)
-		}
-	}
-	
-	static Close(*) {
-		if tgPID := ProcessExist(this._processName) {
-			ProcessClose(tgPID)
 		}
 	}
 	

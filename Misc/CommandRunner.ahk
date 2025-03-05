@@ -186,7 +186,7 @@ class CommandRunner {
 		input := Trim(this._consoleEdit.Value)
 		this._consoleEdit.Value := ""
 		
-		if StrIsEmptyOrWhiteSpace(input) {
+		if not input {
 			this._ShowOutput("Empty input.")
 			return
 		}
@@ -201,7 +201,7 @@ class CommandRunner {
 		
 		this._isRunning := true
 		try {
-			func(&args, this._prevWinHwnd, &output)
+			func(args, this._prevWinHwnd, &output)
 		} finally {
 			this._isRunning := false
 		}
@@ -214,12 +214,10 @@ class CommandRunner {
 		
 		
 		SplitInput(&input, &command, &args) {
-			; Divide it into just 2 parts and return the arguments (if any) as a single string,
-			; allowing further functions to handle those arguments the way they need to.
 			parts := StrSplit(input, A_Space, , 2)
 			
 			command := parts[1]
-			args := (parts.Length == 2 && trimmedArgs := LTrim(parts[2])) ? trimmedArgs : ""
+			args := CommandRunner.ArgsIter(parts.Length == 2 ? this._NormalizeArgs(parts[2]) : [])
 		}
 	}
 	
@@ -251,7 +249,7 @@ class CommandRunner {
 		this._commands.Default := ""
 	}
 	
-	static _HandleCommand(&args, _, &output) {
+	static _HandleCommand(args, _, &output) {
 		output := "TODO"
 	}
 	
@@ -269,10 +267,10 @@ class CommandRunner {
 		
 		editOpts := Format(
 			"Background171717 -E0x200 xP yP+{1} wP h{2} -VScroll ReadOnly Hidden", 
-			this._height + this._outputEditPaddY,
-			this._outputEditHeight)
+			this._height + this._outputEditPaddY, this._outputEditHeight)
 			
 		this._outputEdit := this._console.AddEdit(editOpts)
+		this._outputEdit.SetFont("s14 c0xbdbdbd")
 		
 		this._console.Show("Hide")
 		
@@ -280,5 +278,86 @@ class CommandRunner {
 			this._xPos + Disposition.GetShift(this._xDisposition, this._width),
 			this._yPos + Disposition.GetShift(this._yDisposition, this._height)
 		)
+	}
+	
+	static _NormalizeArgs(args) {
+		normalizedArgs := []
+		
+		loop parse args, A_Space, "`t`r`n" {
+			if (arg := A_LoopField) == "" {
+				continue
+			}
+			
+			if SubStr(arg, 1, 2) == "--" {
+				HandleLong(arg, normalizedArgs)
+			} else if SubStr(arg, 1, 1) == "-" {
+				HandleShort(arg, normalizedArgs)
+			} else {
+				normalizedArgs.Push(Argument(arg))
+			}
+		}
+		
+		return normalizedArgs
+		
+		HandleLong(arg, list) {
+			if i := InStr(arg, "=") {
+				AddCombinedKeyValue(arg, i, normalizedArgs)
+			} else {
+				list.Push(OptArgument(arg))
+			}
+		}
+		
+		HandleShort(arg, list) {
+			if i := InStr(arg, "=") {
+				AddCombinedKeyValue(arg, i, normalizedArgs)
+				return
+			}
+			if (len := StrLen(arg)) < 3 {
+				list.Push(OptArgument(arg))
+				return
+			}
+			i := 1
+			while ++i <= len {
+				list.Push(OptArgument("-" SubStr(arg, i, 1)))
+			}
+		}
+		
+		AddCombinedKeyValue(arg, i, list) => list.Push(OptArgument(SubStr(arg, 1, i-1)), Argument(SubStr(arg, i+1)))
+		
+		OptArgument(value) => CommandRunner.Argument(value, true)
+		
+		Argument(value) => CommandRunner.Argument(value, false)
+	}
+	
+	
+	class ArgsIter {
+		_args  := unset
+		_index := 0
+		
+		__New(args) {
+			if !(args is Array) {
+				throw Error(Format("Invalid type for 'args'. Expected: 'Array'; got: '{}'.", Type(args)))
+			}
+			this._args := args
+		}
+		
+		Next(&arg) {
+			if this._index >= this._args.Length {
+				arg := ""
+				return false
+			}
+			
+			arg := this._args[++this._index]
+			return true
+		}
+		
+		IsEmpty => this._args.Length == 0
+	}
+	
+	class Argument {
+		Value    := unset
+		IsOption := unset
+		
+		__New(val, isOption) => (this.Value := val, this.IsOption := isOption)
 	}
 }

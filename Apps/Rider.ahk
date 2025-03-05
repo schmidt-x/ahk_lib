@@ -1,56 +1,12 @@
 #Include <System\Paths>
-#Include <Common\Helpers>
-#Include <Misc\CommandRunner>
 
 class Rider {
 	static _processName     := "rider64.exe"
 	static _winProcessName  := "ahk_exe " this._processName
 	static _fullProcessName := Paths.LocalPrograms "\Rider\bin\" this._processName
 	
-	static _projects := Map()
-	
 	static ProcessName => this._processName
 	static IsActive => WinActive(this._winProcessName)
-	
-	static __New() {
-		this._InitProjects()
-		CommandRunner.AddCommands("rider", this.Open.Bind(this))
-	}
-	
-	static Open(&projName, _, &output) {
-		if StrIsEmptyOrWhiteSpace(projName) {
-			; It doesn't seem to have a way to open the Welcome page,
-			; if at least one solution is already opened
-			if !WinExist(this._winProcessName) {
-				Run(this._fullProcessName)
-			}
-			return
-		}
-		
-		proj := this._projects.Get(projName)
-		
-		if not proj {
-			output := Format("Project «{}» is not found.", projName)
-			return
-		} 
-		
-		Run(Format('"{}" "{}"', this._fullProcessName, proj))
-	}
-	
-	
-	static _InitProjects() {
-		this._projects.CaseSense := false
-		
-		this._projects.Set(
-			"file",    Paths.ProjectsCSharp . "\FileStorageApi\FileStorageApi.sln",
-			"console", Paths.ProjectsCSharp . "\TestConsole\TestConsole.sln",
-			"web",     Paths.ProjectsCSharp . "\TestWeb\TestWeb.sln",
-			"web2",    Paths.ProjectsCSharp . "\TestWeb2\TestWeb2.sln",
-			"tgbot",   Paths.ProjectsCSharp . "\TestTgBot\TestTgBot.sln"
-		)
-		
-		this._projects.Default := ""
-	}
 	
 	
 	; --- Shortcuts ---
@@ -79,7 +35,10 @@ class Rider {
 	
 	static GoToImplementation() => SendInput("^{F12}")
 	
-	static QuickDocumentation() => SendInput("^k^i")
+	static QuickDocumentation() {
+		SetKeyDelay(50)
+		SendEvent("^k^i")
+	}
 	
 	static CommentLine() => SendInput("^/")
 	
