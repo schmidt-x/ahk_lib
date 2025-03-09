@@ -103,20 +103,41 @@ class Mode {
 	
 	; --- private ---
 	
-	static _HandleCommand(&args, hwnd, &output) {
-		; TODO:
-		
-		if args == "-t" {
-			this.ToggleDisplay()
+	/** @param {CommandRunner.ArgsIter} args */
+	static _HandleCommand(args, _, &output) {
+		if not args.Next(&arg) {
+			output := GetUsage()
 			return
 		}
 		
-		output := "
-			(
-			Wrong option.`n
-			Supported list of options:
-			-t `t Toggle Mode displaying
-			)"
+		if arg.IsOption {
+			switch option := arg.Value {
+				case "-h", "--help":
+					output := GetUsage()
+				default:
+					output := Format("Unknown option '{}'.", option)
+			}
+			return
+		}
+		
+		switch command := arg.Value {
+			case "tg":
+				this.ToggleDisplay()
+			default:
+				output := Format("Unknown command '{}'.", command)
+		}
+		
+		
+		GetUsage() => "
+		(
+			Usage: mode [OPTIONS] COMMAND
+			
+			Options:
+			--help, -h:  Get usage
+			
+			Commands:
+			tg:  Toggle window's visibility
+		)"
 	}
 	
 	static _InitDisplay() {
