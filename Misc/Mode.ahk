@@ -133,7 +133,7 @@ class Mode {
 			Usage: mode [OPTIONS] COMMAND
 			
 			Options:
-			--help, -h:  Get usage
+			-h, --help:  Print usage
 			
 			Commands:
 			tg:  Toggle window's visibility

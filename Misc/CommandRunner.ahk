@@ -1,3 +1,4 @@
+#Include <Collections\LinkedList>
 #Include <Common\Disposition>
 #Include <Common\Helpers>
 
@@ -10,7 +11,7 @@ class CommandRunner {
 	/**
 	 * @type {Gui.Control}
 	 */
-	static _consoleEdit     := unset
+	static _consoleEdit := unset
 	
 	static _xPos := A_ScreenWidth / 2
 	static _yPos := A_ScreenHeight / 100 * 20
@@ -108,18 +109,18 @@ class CommandRunner {
 	
 	; --- private ---
 
-	; TODO: probably should redo using dynamic hotkeys
 	static _OnKEYDOWN(wParam, lParam, msg, hwnd) {
-		isEdit   := hwnd == this._consoleEdit.Hwnd
-		isOutput := hwnd == this._outputEdit.Hwnd
+		isEdit := hwnd == this._consoleEdit.Hwnd
 		
-		if !isEdit && !isOutput {
+		if !isEdit && hwnd != this._outputEdit.Hwnd {
 			return
 		}
 		
 		VK_BACK   := 0x08
 		VK_RETURN := 0x0D
 		VK_ESCAPE := 0x1B
+		VK_UP     := 0x26
+		VK_DOWN   := 0x28
 		
 		switch wParam {
 		case VK_ESCAPE:
@@ -135,6 +136,16 @@ class CommandRunner {
 				return
 			} 
 			SendInput("{Blind}+{Left}{Del}")
+		case VK_UP:
+			if !isEdit {
+				return
+			}
+			this.History.Up(this._consoleEdit)
+		case VK_DOWN:
+			if !isEdit {
+				return
+			}
+			this.History.Down(this._consoleEdit)
 		default: return
 		}
 		
@@ -157,6 +168,7 @@ class CommandRunner {
 			; Without clearing - unless an executing command has stolen the focus.
 			if this._isRunning {
 				this._ClearAndSetInvisible()
+				this.History.Reset()
 			}
 			
 			this._console.Hide()
@@ -179,6 +191,7 @@ class CommandRunner {
 		}
 		
 		this._console.Hide()
+		this.History.Reset()
 	}
 	
 	; TODO: add docs
@@ -191,6 +204,7 @@ class CommandRunner {
 			return
 		}
 		
+		this.History.Add(input)
 		SplitInput(&input, &command, &args)
 		
 		func := this._commands.Get(command)
@@ -249,8 +263,45 @@ class CommandRunner {
 		this._commands.Default := ""
 	}
 	
+	/**
+	 * @param {CommandRunner.ArgsIter} args
+	 */
 	static _HandleCommand(args, _, &output) {
-		output := "TODO"
+		if not args.Next(&arg) {
+			output := GetUsage()
+			return
+		}
+		
+		if arg.IsOption {
+			switch option := arg.Value {
+				case "-h", "--help":
+					output := GetUsage()
+				default:
+					output := Format("Unknown option '{}'.", option)
+			}
+			return
+		}
+		
+		switch command := arg.Value {
+			case "ch":
+				this.History.ClearHistory()
+				output := "History cleared."
+			
+			default:
+				output := Format("Unknown command '{}'.", command)
+		}
+		
+		
+		GetUsage() => "
+		(
+			Usage: this [OPTIONS] COMMAND
+			
+			Options:
+			--help, -h:  Get usage
+			
+			Commands:
+			ch:  Clear history
+		)"
 	}
 	
 	static _InitConsole() {
@@ -359,5 +410,118 @@ class CommandRunner {
 		IsOption := unset
 		
 		__New(val, isOption) => (this.Value := val, this.IsOption := isOption)
+	}
+	
+	class History {
+		static _commands    := LinkedList()
+		static _commandsMap := Map()
+		
+		/** 
+		 * @type {LinkedListNode}
+		 */
+		static _current := ""
+		static _maxSize := 32
+		static _tempCommand := ""
+		
+		static __New() {
+			this._commandsMap.Default := ""
+		}
+		
+		/**
+		 * @param {Gui.Edit} edit
+		 */
+		static Up(edit) {
+			if this._commands.Size == 0 {
+				return
+			}
+			
+			if this._current == "" {
+				SetLastAndDisplay(edit)
+				return
+			}
+			
+			if this.IsContentUpdated(edit) {
+				this.Reset()
+				SetLastAndDisplay(edit)
+				return
+			}
+			
+			if (prev := this._current.Prev) == "" {
+				return
+			}
+			
+			this.Display(edit, prev.Value)
+			this._current := prev
+			
+			
+			SetLastAndDisplay(edit) {
+				this._current := this._commands.Last
+				this._tempCommand := edit.Value ; don't trim
+				this.Display(edit, this._current.Value)
+			}
+		}
+		
+		/**
+		 * @param {Gui.Edit} edit 
+		 */
+		static Down(edit) {
+			if this._commands.Size == 0 || this._current == "" {
+				return
+			} 
+			
+			if (next := this._current.Next) == "" {
+				if not this.IsContentUpdated(edit) {
+					this.Display(edit, this._tempCommand)
+				}
+				this.Reset()
+				return
+			}
+			
+			if this.IsContentUpdated(edit) {
+				this.Reset()
+				return
+			}
+			
+			this.Display(edit, next.Value)
+			this._current := next
+		}
+		
+		static Add(command) {
+			this.Reset()
+			
+			if node := this._commandsMap[command] {
+				this._commands.MoveToEnd(node)
+				return
+			}
+			
+			if this._commands.Size == this._maxSize {
+				this._commands.RemoveFirst(&deletedCommand)
+				this._commandsMap.Delete(deletedCommand)
+			}
+			
+			node := LinkedListNode(command)
+			this._commandsMap.Set(node.Value, node)
+			this._commands.AddLast(node)
+		}
+		
+		static Reset() {
+			this._current := ""
+			this._tempCommand := ""
+		}
+		
+		static ClearHistory() {
+			this._commandsMap.Clear()
+			this._commands.Clear()
+		}
+		
+		static IsContentUpdated(edit) => this._current.Value != Trim(edit.Value)
+		
+		/**
+		 * @param {Gui.Edit} edit
+		 */
+		static Display(edit, value) {
+			edit.Value := value	
+			PostMessage(0x00B1, len := StrLen(value), len, edit.Hwnd) ; EM_SETSEL
+		}
 	}
 }
