@@ -1,8 +1,12 @@
 class LinkedList {
-	/** @type {LinkedListNode} */
+	/**
+	 * @type {LinkedListNode}
+	 */
 	_head := ""
 	
-	/** @type {LinkedListNode} */
+	/**
+	 * @type {LinkedListNode}
+	 */
 	_tail := ""
 	
 	_size := 0
@@ -72,7 +76,9 @@ class LinkedList {
 		return true
 	}
 	
-	/** @param {LinkedListNode} node */
+	/**
+	 * @param {LinkedListNode} node
+	 */
 	MoveToEnd(node) {
 		if !(node is LinkedListNode) {
 			throw TypeError(Format("Invalid type. Expected: 'LinkedListNode'; got: '{}'.", Type(node)))
@@ -86,17 +92,17 @@ class LinkedList {
 			return
 		}
 		
-		if node._prev == "" { ; the node is 'Head'
-			; update the head
+		if node._prev == "" {
+			; The node is a head
 			this._head := node._next
 			this._head._prev := ""
-		} else { ; the node is somewhere in the middle
-			; connect 2 nodes (prev and next) with each other
+		} else {
+			; The node is in the middle
 			node._prev._next := node._next
 			node._next._prev := node._prev
 		}
 		
-		; move node to the end
+		; Move node to the end
 		this._tail._next := node
 		node._prev := this._tail
 		this._tail := node
@@ -121,13 +127,19 @@ class LinkedList {
 }
 
 class LinkedListNode {
-	/** @type {LinkedListNode} */
+	/**
+	 * @type {LinkedListNode}
+	 */
 	_prev := ""
 	
-	/** @type {LinkedListNode} */
+	/**
+	 * @type {LinkedListNode}
+	 */
 	_next := ""
 	
-	/** @type {LinkedList} */
+	/**
+	 * @type {LinkedList}
+	 */
 	_list := ""
 	
 	Value := unset

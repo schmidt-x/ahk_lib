@@ -5,7 +5,7 @@
 
 class I44 {
 	static _vendorID  := 0xFEED
-	static _productID := 0x0003
+	static _productID := 0x03
 	
 	static _usagePage := 0xFF60
 	static _usageID   := 0x61
