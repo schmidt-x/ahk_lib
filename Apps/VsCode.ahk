@@ -124,17 +124,13 @@ class VsCode {
 	
 	static ShrinkSelection() => SendInput("+!{Left}")
 	
-	static MoveLineUp() => SendInput("!{Up}")
-	
-	static MoveLineDown() => SendInput("!{Down}")
-	
 	static GoForward() => SendInput("!{Right}")
 	
 	static GoBack() => SendInput("!{Left}")
 	
-	static NextMember() => SendInput("^{Down}")
+	static PrevMember() => SendInput("!{Up}")
 	
-	static PrevMember() => SendInput("^{Up}")
+	static NextMember() => SendInput("!{Down}")
 	
 	static ToggleSourceControl() => SendInput("^+g")
 	

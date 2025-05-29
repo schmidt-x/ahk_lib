@@ -120,17 +120,13 @@ class Rider {
 	
 	static ToggleInlayHints() => SendInput("^{Numpad4}")
 	
-	static MoveLineUp() => SendInput("{Blind+#^}!{Up}")
-	
-	static MoveLineDown() => SendInput("{Blind+#^}!{Down}")
-	
 	static Forward() => SendInput("{Blind+#^}!{Right}")
 	
 	static Back() => SendInput("{Blind+#^}!{Left}")
 	
-	static NextMethod() => SendInput("^{Down}")
+	static NextMethod() => SendInput("{LAlt Down}{Down}{Ctrl Down}{LAlt Up}{Ctrl Up}")
 	
-	static PrevMethod() => SendInput("^{Up}")
+	static PrevMethod() => SendInput("{LAlt Down}{Up}{Ctrl Down}{LAlt Up}{Ctrl Up}")
 	
 	static ScrollTerminalUp() => SendInput("^{Up}")
 	

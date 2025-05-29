@@ -18,7 +18,7 @@ ClipSend(str, restore := true) {
 	A_Clipboard := str
 	SendInput("^v")
 	if restore {
-		SetTimer(() => A_Clipboard := prevClip, -50)
+		SetTimer(() => A_Clipboard := prevClip, -100)
 	}
 }
 
@@ -51,10 +51,11 @@ DragWindow(keyToHold) {
 		return
 	}
 	
-	WinGetPos(&prevWinX, &prevWinY,,, winHWND)
-	
 	prevWinDelay := A_WinDelay
 	SetWinDelay(-1)
+	
+	WinActivate(winHWND)
+	WinGetPos(&prevWinX, &prevWinY,,, winHWND)
 	
 	loop {
 		MouseGetPos(&mouseX, &mouseY)
