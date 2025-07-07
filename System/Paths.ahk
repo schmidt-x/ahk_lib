@@ -53,6 +53,7 @@ class Paths {
 			"ahk/lib",     this.AhkLib,
 			"me",          this.User,
 			"code/usr",    this.VsCodeUser,
+			"test.ahk",    this.Desktop "\test.ahk"
 		)
 		
 		this._paths.Default := ""

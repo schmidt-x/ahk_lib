@@ -205,11 +205,15 @@ class CommandRunner {
 		}
 		
 		this.History.Add(input)
-		SplitInput(&input, &command, &args)
+		SplitInput(input, &command, &rawArgs)
 		
-		func := this._commands.Get(command)
-		if not func {
+		if not func := this._commands.Get(command) {
 			this._ShowOutput(Format("Command «{}» not found.", command))
+			return
+		}
+		
+		if not args := ParseArgs(rawArgs, &errorMessage) {
+			this._ShowOutput(errorMessage)
 			return
 		}
 		
@@ -228,11 +232,135 @@ class CommandRunner {
 		
 		return
 		
-		static SplitInput(&input, &command, &args) {
+		static SplitInput(input, &command, &rawArgs) {
 			parts := StrSplit(input, A_Space, , 2)
-			
 			command := parts[1]
-			args := CommandRunner.ArgsIter(parts.Length == 2 ? CommandRunner._NormalizeArgs(parts[2]) : [])
+			rawArgs := parts.Length == 2 ? parts[2] : ""
+		}
+		
+		static ParseArgs(args, &errorMessage) {
+			if not len := StrLen(args) {
+				return CommandRunner.ArgsIter([])
+			}
+			
+			normalizedArgs := []
+			
+			isSQuoted := isDQuoted := false
+			start := 1, i := 0
+
+			while ++i <= len {
+				switch SubStr(args, i, 1) {
+				case '"':
+					if not isDQuoted {
+						if isSQuoted
+							continue
+						
+						if start < i {
+							AddArgument(normalizedArgs, SubStr(args, start, i-start))
+						}
+						
+						isDQuoted := true
+						start := i+1
+						continue
+					}
+					
+					isDQuoted := false
+					
+					if start == i {
+						start++
+						continue
+					}
+				
+				case "'":
+					if not isSQuoted {
+						if isDQuoted
+							continue
+						
+						if start < i {
+							AddArgument(normalizedArgs, SubStr(args, start, i-start))
+						}
+						
+						isSQuoted := true
+						start := i+1
+						continue
+					}
+					
+					isSQuoted := false
+					
+					if start == i {
+						start++
+						continue
+					}
+					
+				case A_Space:
+					if isSQuoted || isDQuoted {
+						if start == i { ; trim the beginning
+							start++
+						}
+						continue
+					}
+					
+					if start == i { ; trim the beginning
+						start++
+						continue
+					}
+				
+				default: continue
+				}
+				
+				AddArgument(normalizedArgs, RTrim(SubStr(args, start, i-start)))
+				start := i+1
+			}
+
+			if isSQuoted || isDQuoted {
+				errorMessage := "Missing closing quote."
+				return ""
+			}
+
+			if start < i {
+				AddArgument(normalizedArgs, SubStr(args, start))
+			}
+			
+			return CommandRunner.ArgsIter(normalizedArgs)
+			
+			static AddArgument(list, arg) {
+				if SubStr(arg, 1, 2) == "--" {
+					HandleLong(list, arg)
+				} else if SubStr(arg, 1, 1) == "-" {
+					HandleShort(list, arg)
+				} else {
+					list.Push(Argument(arg))
+				}
+			}
+			
+			static HandleLong(list, arg) {
+				if i := InStr(arg, "=") {
+					AddCombinedKeyValue(arg, i, list)
+				} else {
+					list.Push(OptArgument(arg))
+				}
+			}
+			
+			static HandleShort(list, arg) {
+				if i := InStr(arg, "=") {
+					AddCombinedKeyValue(arg, i, list)
+					return
+				}
+				if (len := StrLen(arg)) < 3 {
+					list.Push(OptArgument(arg))
+					return
+				}
+				i := 1
+				while ++i <= len {
+					list.Push(OptArgument("-" SubStr(arg, i, 1)))
+				}
+			}
+			
+			static AddCombinedKeyValue(list, arg, i) => list.Push(OptArgument(SubStr(arg, 1, i-1)), Argument(SubStr(arg, i+1)))
+			
+			static OptArgument(value) => CommandRunner.Argument(value, true)
+			
+			static Argument(value) => CommandRunner.Argument(value, false)
 		}
 	}
 	
@@ -331,56 +459,6 @@ class CommandRunner {
 			this._yPos + Disposition.GetShift(this._yDisposition, this._height)
 		)
 	}
-	
-	static _NormalizeArgs(args) {
-		normalizedArgs := []
-		
-		loop parse args, A_Space, "`t`r`n" {
-			if (arg := A_LoopField) == "" {
-				continue
-			}
-			
-			if SubStr(arg, 1, 2) == "--" {
-				HandleLong(arg, normalizedArgs)
-			} else if SubStr(arg, 1, 1) == "-" {
-				HandleShort(arg, normalizedArgs)
-			} else {
-				normalizedArgs.Push(Argument(arg))
-			}
-		}
-		
-		return normalizedArgs
-		
-		static HandleLong(list, arg) {
-			if i := InStr(arg, "=") {
-				AddCombinedKeyValue(arg, i, list)
-			} else {
-				list.Push(OptArgument(arg))
-			}
-		}
-		
-		static HandleShort(list, arg) {
-			if i := InStr(arg, "=") {
-				AddCombinedKeyValue(arg, i, list)
-				return
-			}
-			if (len := StrLen(arg)) < 3 {
-				list.Push(OptArgument(arg))
-				return
-			}
-			i := 1
-			while ++i <= len {
-				list.Push(OptArgument("-" SubStr(arg, i, 1)))
-			}
-		}
-		
-		static AddCombinedKeyValue(list, arg, i) => list.Push(OptArgument(SubStr(arg, 1, i-1)), Argument(SubStr(arg, i+1)))
-		
-		static OptArgument(value) => CommandRunner.Argument(value, true)
-		
-		static Argument(value) => CommandRunner.Argument(value, false)
-	}
-	
 	
 	class ArgsIter {
 		_args  := unset
