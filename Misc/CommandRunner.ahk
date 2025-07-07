@@ -226,12 +226,13 @@ class CommandRunner {
 			this._HideOutput()
 		}
 		
+		return
 		
-		SplitInput(&input, &command, &args) {
+		static SplitInput(&input, &command, &args) {
 			parts := StrSplit(input, A_Space, , 2)
 			
 			command := parts[1]
-			args := CommandRunner.ArgsIter(parts.Length == 2 ? this._NormalizeArgs(parts[2]) : [])
+			args := CommandRunner.ArgsIter(parts.Length == 2 ? CommandRunner._NormalizeArgs(parts[2]) : [])
 		}
 	}
 	
@@ -350,17 +351,17 @@ class CommandRunner {
 		
 		return normalizedArgs
 		
-		HandleLong(arg, list) {
+		static HandleLong(list, arg) {
 			if i := InStr(arg, "=") {
-				AddCombinedKeyValue(arg, i, normalizedArgs)
+				AddCombinedKeyValue(arg, i, list)
 			} else {
 				list.Push(OptArgument(arg))
 			}
 		}
 		
-		HandleShort(arg, list) {
+		static HandleShort(list, arg) {
 			if i := InStr(arg, "=") {
-				AddCombinedKeyValue(arg, i, normalizedArgs)
+				AddCombinedKeyValue(arg, i, list)
 				return
 			}
 			if (len := StrLen(arg)) < 3 {
@@ -373,11 +374,11 @@ class CommandRunner {
 			}
 		}
 		
-		AddCombinedKeyValue(arg, i, list) => list.Push(OptArgument(SubStr(arg, 1, i-1)), Argument(SubStr(arg, i+1)))
+		static AddCombinedKeyValue(list, arg, i) => list.Push(OptArgument(SubStr(arg, 1, i-1)), Argument(SubStr(arg, i+1)))
 		
-		OptArgument(value) => CommandRunner.Argument(value, true)
+		static OptArgument(value) => CommandRunner.Argument(value, true)
 		
-		Argument(value) => CommandRunner.Argument(value, false)
+		static Argument(value) => CommandRunner.Argument(value, false)
 	}
 	
 	
